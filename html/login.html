@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f2f5;
+        }
+
+        .container {
+            background: white;
+            padding: 7vh;
+            border-radius: 1vh;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 50vh;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1877f2;
+            margin-bottom: 5vh;
+        }
+
+        .form-group {
+            margin-bottom: 3vh;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 1vh;
+            color: #606770;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 1vh;
+            border: 1px solid #dddfe2;
+            border-radius: 6px;
+            font-size: 3vh;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 2px #e7f3ff;
+        }
+
+        button {
+            width: 100%;
+            padding: 2vh;
+            background: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 2vh;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #166fe5;
+        }
+
+        .links {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .links a {
+            color: #2617c6;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .separator {
+            border-top: 1px solid #dbdae1;
+            margin: 10% 20%;
+        }
+        .gradient-background {
+            height: 100vh; /* 占满整个视口高度 */
+            width: 100vw;   /* 占满整个视口宽度 */
+            background: linear-gradient(to right, blue, rgb(128, 0, 255)); /* 蓝到红渐变 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-background">
+        <div class="container">
+            <h1>用户登录</h1>
+            <form id="loginForm" onsubmit="return validateForm()">
+                <div class="form-group">
+                    <label for="username">用户名/邮箱</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit">登录</button>
+            </form>
+
+            <div class="links">
+                <a href="#">忘记密码？</a>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="links">
+                <a href="register.html">创建新账户</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        function validateForm() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // 简单的前端验证
+            if(username.trim() === '') {
+                alert('请输入用户名');
+                return false;
+            }
+
+            if(password.trim() === '') {
+                alert('请输入密码');
+                return false;
+            }
+            
+            if (password.length <8){
+                alert("密码不能少于8位");
+                return false;
+            }
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username, password }),
+            })
+            .then(response => {
+                if (response.ok) {
+                    // 登录成功，跳转到仪表盘
+                    window.location.href = '/dashboard';
+                } else {
+                    // 尝试解析错误信息
+                    response.json().then(data => {
+                        alert(data.message || '登录失败，请检查凭据');
+                    }).catch(() => {
+                        alert('登录失败，状态码：' + response.status);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('请求错误:', error);
+                alert('网络错误，请检查连接');
+            });
+
+            alert('登录功能需对接后端API');
+            return false;
+        }
+    </script>
+</body>
+</html>

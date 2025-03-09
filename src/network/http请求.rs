@@ -1,0 +1,134 @@
+use std::collections::HashMap;
+
+#[derive(PartialEq,Debug)]
+pub enum 请求方法{
+    GET,
+    POST,
+    PUT,
+    DELETE,
+    OTHER,
+    NONE
+}
+
+#[derive(PartialEq,Debug)]
+pub enum http协议版本{
+    HTTP1_0,
+    HTTP1_1,
+    HTTP2,
+    OTHER,
+    NONE
+}
+
+#[derive(PartialEq,Debug)]
+pub struct 请求行{
+    pub 请求方法:请求方法,
+    pub url:String,
+    pub http协议版本:http协议版本,
+}
+impl 请求行{
+    fn default_new()->Self{
+        请求行{
+            请求方法:请求方法::NONE,
+            url:"".to_string(),
+            http协议版本:http协议版本::NONE
+        }
+    }
+    fn new(s:&str)->Self{
+        let 切割请求行:Vec<_>=s.split(' ').collect();
+        let 请求方法=match 切割请求行[0] {
+            "GET"=>请求方法::GET,
+            "POST"=>请求方法::POST,
+            "DELETE"=>请求方法::DELETE,
+            "PUT"=>请求方法::PUT,
+            _=>请求方法::OTHER
+        };
+        let url=切割请求行[1].to_string();
+        let http协议版本=match 切割请求行[2]{
+            "HTTP/1.0"=>http协议版本::HTTP1_0,
+            "HTTP/1.1"=>http协议版本::HTTP1_1,
+            "HTTP/2"  =>http协议版本::HTTP2,
+            _         =>http协议版本::OTHER,
+        };
+        请求行{
+            请求方法,
+            url,
+            http协议版本
+        }
+    }
+}
+#[derive(PartialEq,Debug)]
+pub struct http请求{
+    pub 请求行:请求行,
+    pub 请求头部:HashMap<String,String>,
+    pub 请求体:Vec<String>
+}
+impl http请求{
+    fn 从str转换到http请求(s:&str)->Self{
+        //使用状态机
+        let (mut 请求行,mut 请求头部,mut 请求体)=(请求行::default_new(),HashMap::new(),Vec::new());
+        let mut 状态="请求行";
+        for line in s.lines(){
+            match 状态{
+                "请求行"=>{
+                    请求行=请求行::new(line);
+                    状态="请求头部";
+                },
+                "请求头部"=>{
+                    if line.is_empty(){
+                        状态="请求体";
+                    }else{
+                        let 切分请求头部kv行:Vec<_>=line.split(":").collect();
+                        请求头部.insert(切分请求头部kv行[0].trim().to_string(),切分请求头部kv行[1].trim().to_string());
+                    }
+                }
+                "请求体" =>{
+                    if line.is_empty(){
+                        break;
+                    }
+                    请求体.push(line.to_string());
+                }         
+                _=>{
+                    panic!("状态机出现错误");
+                }       
+            }
+        }
+        http请求{
+            请求行,
+            请求头部,
+            请求体
+        }
+    }
+}
+impl From<&str> for http请求{
+    fn from(s: &str) -> Self{
+        Self::从str转换到http请求(s)
+    }
+}
+#[cfg(test)]
+mod test{
+    use crate::network::http请求::{http协议版本, 请求方法};
+
+    use super::http请求;
+
+    #[test]
+    fn 测试http请求解析正常情况(){
+        let http请求字符串=
+"POST /v1/resource HTTP/1.1
+Host: api.example.com
+Content-Type: application/json
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3
+Content-Length: 65
+
+Hello 91";
+        let http请求:http请求=http请求字符串.into();
+        assert_eq!(http请求.请求行.请求方法,请求方法::POST);
+        assert_eq!(http请求.请求行.url,"/v1/resource");
+        assert_eq!(http请求.请求行.http协议版本,http协议版本::HTTP1_1);
+        assert_eq!(http请求.请求头部["Host"],"api.example.com");
+        assert_eq!(http请求.请求头部["Content-Type"],"application/json");
+        assert_eq!(http请求.请求头部["User-Agent"],"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+        assert_eq!(http请求.请求头部["Content-Length"],"65");
+        assert_eq!(http请求.请求体.len(),1);
+        assert_eq!(http请求.请求体[0],"Hello 91");
+    }
+}
