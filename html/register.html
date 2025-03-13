@@ -111,7 +111,7 @@
 <body>
     <div class="gradient-background">
         <div class="container">
-            <h1>用户登录</h1>
+            <h1>用户注册</h1>
             <form id="loginForm" onsubmit="return validateForm()">
                 <div class="form-group">
                     <label for="username">用户名/邮箱</label>
@@ -123,18 +123,8 @@
                     <input type="password" id="password" name="password" required>
                 </div>
                 
-                <button type="submit">登录</button>
+                <button type="submit">注册</button>
             </form>
-
-            <div class="links">
-                <a href="#">忘记密码？</a>
-            </div>
-
-            <div class="separator"></div>
-
-            <div class="links">
-                <a href="register">创建新账户</a>
-            </div>
         </div>
     </div>
     <script>
@@ -157,7 +147,7 @@
                 alert("密码不能少于8位");
                 return false;
             }
-            fetch('/api/login', {
+            fetch('/api/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -166,15 +156,15 @@
             })
             .then(response => {
                 if (response.ok) {
-                    // 登录成功，跳转到仪表盘
-                    window.location.href = '/dashboard';
+                    // 注册成功，跳转到仪表盘
+                    window.location.href = '/';
                     return true;
                 } else {
                     // 尝试解析错误信息
                     response.json().then(data => {
-                        alert(data.message || '登录失败，请检查凭据');
+                        alert(data.message || '注册失败，请检查凭据');
                     }).catch(() => {
-                        alert('登录失败，状态码：' + response.status);
+                        alert('注册失败，状态码：' + response.status);
                     });
                 }
             })

@@ -35,6 +35,19 @@ pub fn 处理api_login请求(http请求:http请求::http请求)->Result<(),Box<d
 
     Ok(())
 }
+pub fn 处理api_register请求(http请求:http请求::http请求)->Result<(),Box<dyn Error>>{
+    let http请求体合并=&http请求.请求体.join("\r\n");
+    let 注册信息:登录信息=serde_json::from_str(http请求体合并)?;
+    //查询登录信息是否在数据库中存在(登录信息)
+    let mut conn = crate::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
+    conn.exec_drop(r"insert into users (username,password,permissions) values (:username,:password,:permissions)", params!{
+        "username"=>注册信息.username,
+        "password"=>注册信息.password,
+        "permissions"=>"游客",
+    })?;
+
+    Ok(())
+}
 #[cfg(test)]
 mod test{
     

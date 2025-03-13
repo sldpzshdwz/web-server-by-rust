@@ -8,7 +8,7 @@ use std::{
 use project_root::get_project_root;
 use http请求::{请求方法};
 use http回应::{根据信息回复http报文, 根据文件路径回复http报文};
-use crate::{api::处理api_login请求, log::{self, 日志信息, 日志生产者, 日志级别}, thread_pool::线程池};
+use crate::{api::{处理api_login请求, 处理api_register请求}, log::{self, 日志信息, 日志生产者, 日志级别}, thread_pool::线程池};
 
 pub fn 绑定到端口(端口地址:&str){
 
@@ -51,6 +51,10 @@ pub fn 处理http请求(mut stream:TcpStream){
                 let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/dashboard.html");
                 stream.write_all(回复报文.as_bytes()).unwrap();
             }
+            "/register"=>{
+                let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/register.html");
+                stream.write_all(回复报文.as_bytes()).unwrap();
+            },
             _=>{
                 let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
                 stream.write_all(回复报文.as_bytes()).unwrap();
@@ -59,6 +63,20 @@ pub fn 处理http请求(mut stream:TcpStream){
         请求方法::POST=>  match http请求.请求行.url.as_str()  {
             "/api/login"=>{
                 match 处理api_login请求(http请求) {
+                    Ok(())=>{
+                        let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK", r#"{"message":"成功"}"#.to_string());
+                        stream.write_all(回复报文.as_bytes()).unwrap();
+                    }
+                    Err(信息)=>{
+                        let 错误信息=format!("{:?}",信息);
+                        let 回复报文=根据信息回复http报文("HTTP/1.1 500 FAIL", r#"{"message":"#.to_owned()+&错误信息+r#""}"#);
+                        stream.write_all(回复报文.as_bytes()).unwrap();
+                        println!("{信息}");
+                    }
+                }
+            }
+            "/api/register"=>{
+                match 处理api_register请求(http请求) {
                     Ok(())=>{
                         let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK", r#"{"message":"成功"}"#.to_string());
                         stream.write_all(回复报文.as_bytes()).unwrap();
