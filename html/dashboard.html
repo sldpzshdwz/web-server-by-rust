@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+
+        /* 导航容器 */
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        /* 功能网格 */
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* 功能卡片 */
+        .function-card {
+            background: #16213E;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #2A3F54;
+        }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            background: #1A2A3F;
+            box-shadow: 0 8px 25px rgba(0, 78, 255, 0.1);
+        }
+
+        .function-icon {
+            font-size: 2.5em;
+            color: #4AB3F4;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .function-card:hover .function-icon {
+            color: #6EC5FF;
+        }
+
+        .function-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="nav-menu">
+            <div class="nav-item">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 功能导航 -->
+    <div class="nav-container">
+        <div class="function-grid">
+            <!-- 功能卡片 -->
+            <a href="#" class="function-card">
+                <i class="fas fa-cog function-icon"></i>
+                <h3 class="function-title">系统设置</h3>
+                <p class="function-desc">配置系统参数和基础设置</p>
+            </a>
+
+            <a href="#" class="function-card">
+                <i class="fas fa-users-cog function-icon"></i>
+                <h3 class="function-title">用户管理</h3>
+                <p class="function-desc">管理用户账户和权限设置</p>
+            </a>
+
+            <a href="#" class="function-card">
+                <i class="fas fa-shield-alt function-icon"></i>
+                <h3 class="function-title">安全中心</h3>
+                <p class="function-desc">查看安全日志和防护设置</p>
+            </a>
+
+            <a href="#" class="function-card">
+                <i class="fas fa-database function-icon"></i>
+                <h3 class="function-title">数据管理</h3>
+                <p class="function-desc">进行数据备份与恢复操作</p>
+            </a>
+
+            <a href="#" class="function-card">
+                <i class="fas fa-chart-network function-icon"></i>
+                <h3 class="function-title">服务监控</h3>
+                <p class="function-desc">实时监控系统运行状态</p>
+            </a>
+
+            <a href="#" class="function-card">
+                <i class="fas fa-toolbox function-icon"></i>
+                <h3 class="function-title">运维工具</h3>
+                <p class="function-desc">系统维护与管理工具箱</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

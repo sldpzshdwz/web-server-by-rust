@@ -1,4 +1,6 @@
-use std::{error::Error, sync::{mpsc::{self, Sender}, Arc, Mutex}, thread::{self, JoinHandle}};
+use std::{cell::RefCell, error::Error, sync::{mpsc::{self, Sender}, Arc, Mutex, OnceLock}, thread::{self, JoinHandle}};
+
+use crate::log::{日志信息, 日志生产者, 日志级别};
 
 struct Worker{
     pub id:u32,
@@ -27,9 +29,10 @@ impl Worker{
         });
         Worker{id,join_handle,通道生产者,未完成任务数}
     }
-    fn 派发工作(&mut self,f:Box<dyn FnOnce()+Send+'static>)->Result<(),Box<dyn Error>>{
-        self.通道生产者.send(f)?;
+    fn 派发工作(&self,f:Box<dyn FnOnce()+Send+'static>)->Result<(),Box<dyn Error>>{
         *(self.未完成任务数.lock().unwrap())+=1;
+        self.通道生产者.send(f)?;
+        
         Ok(())
     }
 }
@@ -63,7 +66,23 @@ impl 线程池{
             }
         }
         self.线程[最少任务工作者 as usize].派发工作(Box::new(f));
-        println!("派发工作到线程{最少任务工作者},当前线程还有{最少任务数}个未完成任务");
+        let 日志=format!("派发工作到线程{最少任务工作者},当前线程还有{最少任务数}个未完成任务");
+        日志生产者::写入日志(日志, 日志级别::INFO);
+    }
+    pub fn get_instance()->&'static Mutex<线程池>{
+        static INSTANCE:OnceLock<Mutex<线程池>>=OnceLock::new();
+        INSTANCE.get_or_init(|| Mutex::new(线程池::new(crate::线程池线程数)))
+    }
+    pub fn 初始化日志(&self,日志通道生产者:Sender<日志信息>){
+        let 日志通道克隆生产者=日志通道生产者.clone();
+        日志生产者::初始化(日志通道克隆生产者);
+        for Worker in &self.线程{
+            let 日志通道克隆生产者=日志通道生产者.clone();
+            (*Worker).派发工作(Box::new(move ||{
+                    日志生产者::初始化(日志通道克隆生产者);
+                }
+            )).unwrap();
+        }
     }
 }
 

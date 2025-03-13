@@ -168,6 +168,7 @@
                 if (response.ok) {
                     // 登录成功，跳转到仪表盘
                     window.location.href = '/dashboard';
+                    return true;
                 } else {
                     // 尝试解析错误信息
                     response.json().then(data => {
@@ -182,7 +183,6 @@
                 alert('网络错误，请检查连接');
             });
 
-            alert('登录功能需对接后端API');
             return false;
         }
     </script>

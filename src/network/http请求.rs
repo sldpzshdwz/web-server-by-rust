@@ -65,8 +65,9 @@ pub struct http请求{
 impl http请求{
     fn 从str转换到http请求(s:&str)->Self{
         //使用状态机
-        let (mut 请求行,mut 请求头部,mut 请求体)=(请求行::default_new(),HashMap::new(),Vec::new());
+        let (mut 请求行,mut 请求头部,mut 请求体)=(请求行::default_new(),HashMap::<String,String>::new(),Vec::new());
         let mut 状态="请求行";
+        let mut 请求体剩余长度:usize=0;
         for line in s.lines(){
             match 状态{
                 "请求行"=>{
@@ -76,6 +77,9 @@ impl http请求{
                 "请求头部"=>{
                     if line.is_empty(){
                         状态="请求体";
+                        if let Some(i)=请求头部.get("Content-Length"){
+                            请求体剩余长度=i[..].parse::<usize>().unwrap();
+                        }
                     }else{
                         let 切分请求头部kv行:Vec<_>=line.split(":").collect();
                         请求头部.insert(切分请求头部kv行[0].trim().to_string(),切分请求头部kv行[1].trim().to_string());
@@ -85,7 +89,14 @@ impl http请求{
                     if line.is_empty(){
                         break;
                     }
-                    请求体.push(line.to_string());
+                    let 有效字符:&str;
+                    if line.len()>请求体剩余长度{
+                        有效字符=&line[0..请求体剩余长度];
+                    }else {
+                        有效字符=&line[..];
+                    }
+                    请求体剩余长度-=有效字符.len();
+                    请求体.push(有效字符.to_string());
                 }         
                 _=>{
                     panic!("状态机出现错误");
@@ -104,6 +115,13 @@ impl From<&str> for http请求{
         Self::从str转换到http请求(s)
     }
 }
+impl From<String> for http请求{
+    fn from(s: String) -> Self{
+        Self::从str转换到http请求(&s)
+    }
+}
+
+
 #[cfg(test)]
 mod test{
     use crate::network::http请求::{http协议版本, 请求方法};
