@@ -1,16 +1,16 @@
 use std::{cell::RefCell, error::Error, sync::{mpsc::{self, Sender}, Arc, Mutex, OnceLock}, thread::{self, JoinHandle}};
 
 use crate::log::{日志信息, 日志生产者, 日志级别};
-
+type 传递闭包=dyn FnOnce()+Send+'static;
 struct Worker{
     pub id:u32,
     pub join_handle:JoinHandle<()>,
-    pub 通道生产者:Sender<Box<dyn FnOnce()+Send+'static>>,
+    pub 通道生产者:Sender<Box<传递闭包>>,
     pub 未完成任务数:Arc<Mutex<u32>>
 }
 impl Worker{
     fn new(id:u32)->Worker{
-        let (通道生产者,消费者)=mpsc::channel::<Box<dyn FnOnce()+Send+'static>>();
+        let (通道生产者,消费者)=mpsc::channel::<Box<传递闭包>>();
         let 未完成任务数:Arc<Mutex<u32>>=Arc::new(Mutex::new(0));
         let 未完成任务数克隆=未完成任务数.clone();
         let join_handle=thread::spawn(move ||{
@@ -29,7 +29,7 @@ impl Worker{
         });
         Worker{id,join_handle,通道生产者,未完成任务数}
     }
-    fn 派发工作(&self,f:Box<dyn FnOnce()+Send+'static>)->Result<(),Box<dyn Error>>{
+    fn 派发工作(&self,f:Box<传递闭包>)->Result<(),Box<dyn Error>>{
         *(self.未完成任务数.lock().unwrap())+=1;
         self.通道生产者.send(f)?;
         

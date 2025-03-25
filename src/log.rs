@@ -2,6 +2,7 @@ use std::{cell::RefCell, fmt::Display, sync::mpsc::{self, Receiver, Sender}, tim
 
 use crate::thread_pool::线程池;
 
+#[derive(PartialEq)]
 pub enum 日志级别{
     TRACE,
     DEBUG,
@@ -74,8 +75,12 @@ impl 日志消费者{
                 let 信息=接受端.recv();
                 match 信息{
                     Ok(日志信息)=>{
+                        if 日志信息.级别==日志级别::ERROR{
+                            println!("\x1b[31m{}\x1b[0m",日志信息);
+                        }else{
+                            println!("{}",日志信息);
+                        }
                         
-                        println!("{}",日志信息);
                     }
                     Err(错误)=>{
                         break;

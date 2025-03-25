@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use crate::log::{日志生产者, 日志级别};
+
 #[derive(PartialEq,Debug)]
 pub enum 请求方法{
     GET,
@@ -34,7 +36,18 @@ impl 请求行{
         }
     }
     fn new(s:&str)->Self{
+        if s.is_empty(){
+            日志生产者::写入日志("http请求为空".to_string(), 日志级别::ERROR);
+        }
         let 切割请求行:Vec<_>=s.split(' ').collect();
+        if 切割请求行.len()<=1{
+            日志生产者::写入日志("错误解析的http报文".to_string()+s, 日志级别::ERROR);
+            return 请求行{
+                请求方法:请求方法::NONE,
+                url:"".to_string(),
+                http协议版本:http协议版本::NONE
+            };
+        }
         let 请求方法=match 切割请求行[0] {
             "GET"=>请求方法::GET,
             "POST"=>请求方法::POST,
