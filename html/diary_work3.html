@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9CB3C9;
+            margin-left: auto; /* 推至右侧 */
+            padding-right: 30px;
+        }
+        .user-panel i {
+            font-size: 1.4em;
+            color: #4AB3F4;
+        }
+        .username {
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+        .user-panel:hover .username {
+            color: #4AB3F4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+
+        /* 导航容器 */
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        /* 功能网格 */
+        .function-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px; /* 子元素间距 */
+        }
+
+        /* 功能卡片 */
+        .function-card {
+            background: #16213E;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #2A3F54;
+        }
+
+        .function-card:hover {
+            transform: translateY(-5px);
+            background: #1A2A3F;
+            box-shadow: 0 8px 25px #2554c11a;
+        }
+
+        .function-icon {
+            font-size: 2.5em;
+            color: #10d642;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+        .function-card:hover .function-icon {
+            color: #d25524;
+        }
+
+        .function-title {
+            color: #1999de;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        #calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin: 20px auto;
+            width: 80%;
+        }
+
+        .day {
+            border: 1px solid #ccc;
+            padding: 10px;
+            background-color: #e7ee14;
+            cursor: pointer;
+            color:#0A1426
+        }
+
+        .day.completed {
+            background-color: #0ced14; /* 完成的计划背景色 */
+        }
+
+        .day.empty {
+            background-color: #f0f0f0; /* 非本月日期的背景色 */
+        }
+        .month-header {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px; /* 添加间距，避免与日历内容贴得太近 */
+            text-align: center;
+            width: 100%; /* 确保宽度占满父容器 */
+            display: block; /* 明确指定为块级元素 */
+        }
+        .current-day {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1a41cc;
+            margin-bottom: 10px;
+        }
+        /* 按钮容器样式 */
+        .button-container {
+            display: flex; /* 使用 Flexbox 布局 */
+            justify-content: space-between; /* 让子元素分布在两端 */
+            align-items: center; /* 垂直居中对齐 */
+            margin: 20px 0; /* 上下间距 */
+            padding: 0 10px; /* 左右内边距 */
+        }
+
+        /* 按钮通用样式 */
+        .nav-button {
+            padding: 10px 20px; /* 内边距 */
+            font-size: 16px; /* 字体大小 */
+            color: #fff; /* 字体颜色 */
+            background-color: #007bff; /* 背景颜色（蓝色） */
+            border: none; /* 去掉默认边框 */
+            border-radius: 5px; /* 圆角效果 */
+            cursor: pointer; /* 鼠标悬停时显示手型 */
+            transition: background-color 0.3s ease; /* 添加背景色过渡效果 */
+        }
+
+        /* 悬停效果 */
+        .nav-button:hover {
+            background-color: #0056b3; /* 悬停时的背景颜色（深蓝色） */
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="user-panel">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">当前用户：Admin</span>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 功能导航 -->
+    <div class="nav-container">
+        <div class="function-grid">
+            <div id="month-header"></div>
+            <div id="calendar"></div>
+            <div class="button-container">
+                <button class="nav-button" id="prevMonth" onclick="prexMonth()">上一个月</button>
+                <button class="nav-button" id="nextMonth" onclick="nextMonth()">下一个月</button>
+            </div>
+            
+        </div>
+    </div>
+    <script>
+        // 封装用户信息获取逻辑
+        let username;
+        let today,currentYear,currentMonth;
+        function fetchUserInfo() {
+            fetch('/api/get_username', {
+                method: 'GET',
+            })
+            .then(handleResponse)
+            .then(updateUI);
+        }
+        function handleResponse(response) {
+            if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+            return response.json();
+        }
+        function updateUI(data) {
+            document.querySelector('.username').textContent = `当前用户：${data.username}`;
+            username=data.username;// 获取当前日期
+            today = new Date();
+            currentYear = today.getFullYear();
+            currentMonth = today.getMonth();
+            
+            // 初始化日历
+            renderCalendar(currentYear, currentMonth);
+        }
+        document.addEventListener('DOMContentLoaded', fetchUserInfo);
+    
+
+        
+        function prexMonth(){
+            currentMonth-=1;
+            if (currentMonth===-1){
+                currentMonth=11;
+                currentYear--;
+            }
+            renderCalendar(currentYear, currentMonth);
+        }
+        function nextMonth(){
+            currentMonth+=1;
+            if (currentMonth===12){
+                currentMonth=0;
+                currentYear++;
+            }
+            renderCalendar(currentYear, currentMonth);
+        }
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+        // 渲染日历
+        async function renderCalendar(year, month) {
+            const calendarElement = document.getElementById('calendar');
+            calendarElement.innerHTML = '';// 清空日历
+            const monthNames = [
+                "一月", "二月", "三月", "四月", "五月", "六月",
+                "七月", "八月", "九月", "十月", "十一月", "十二月"
+            ];
+            calendarElement.parentNode.children[0].textContent=`${year}年 ${monthNames[month]}`;
+            
+             
+            // 获取当月的第一天和最后一天
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            // 获取当月的天数和第一天是星期几
+            const daysInMonth = lastDay.getDate();
+            const firstDayOfWeek = firstDay.getDay(); // 0 (周日) 到 6 (周六)
+            const dayNames=[
+                "周日","周一","周二","周三","周四","周五","周六"
+            ]
+            for (let i=0;i<7;i++){
+                const dayTag = document.createElement('div');
+                dayTag.classList.add('current-day');
+                dayTag.textContent=dayNames[i];
+                calendarElement.appendChild(dayTag);
+            }
+            // 填充上个月的空白格子
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('day', 'empty');
+                calendarElement.appendChild(emptyDay);
+            }
+
+            // 填充当月的天数
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayElement = document.createElement('div');
+                dayElement.classList.add('day');
+                const year_str =String(year)
+                const month_str = String(month+1).padStart(2, '0'); // 月份从 0 开始，需加 1
+                const day_str = String(day).padStart(2, '0');
+                const formattedDate = `${year_str}-${month_str}-${day_str}`;
+                let select_plan={
+                    username:username,
+                    date:formattedDate
+                };
+                console.log(select_plan)
+                let complete_work,total_work;
+                fetch("/diary_work/select_solve_plan_data",{
+                    method:"POST",
+                    headers: {
+                        'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                    },
+                    body: JSON.stringify(select_plan)
+                }).then(response=>{
+                    if (response.ok){
+                        return response.json();
+                    }
+                }).then(data=>{
+                    complete_work=data[0];
+                    total_work=data[1];
+                }).then(()=>{
+                    // 设置日期文本
+                    dayElement.textContent = day+`  ${complete_work}/${total_work}`;
+
+                    // 检查当天是否有计划完成数据
+                    if (complete_work>=total_work) {
+                        dayElement.classList.add('completed'); // 完成的计划
+                    }
+                    // 如果是今天的日期，添加特殊样式
+
+                    calendarElement.appendChild(dayElement);
+                }).catch(error=>{
+                    console.log(error)
+                });
+                await sleep(2);
+                
+            }
+        }
+
+        
+    </script>
+</body>
+</html>

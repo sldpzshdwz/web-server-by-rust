@@ -1,6 +1,6 @@
 use std::{cell::RefCell, error::Error, sync::{mpsc::{self, Sender}, Arc, Mutex, OnceLock}, thread::{self, JoinHandle}};
 
-use crate::log::{日志信息, 日志生产者, 日志级别};
+use crate::tool::log::{日志信息, 日志生产者, 日志级别};
 type 传递闭包=dyn FnOnce()+Send+'static;
 struct Worker{
     pub id:u32,

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9CB3C9;
+            margin-left: auto; /* 推至右侧 */
+            padding-right: 30px;
+        }
+        .user-panel i {
+            font-size: 1.4em;
+            color: #4AB3F4;
+        }
+        .username {
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+        .user-panel:hover .username {
+            color: #4AB3F4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+
+        /* 导航容器 */
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .function-icon {
+            font-size: 2.5em;
+            color: #10d642;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+
+        .function-title {
+            color: #1999de;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+        .plan {
+            display: flex;
+            flex-direction: column;  /* 垂直排列 */
+            gap: 10px;               /* 元素间距 */
+            align-items: flex-start;     /* 水平居中 */
+            height: 80vh; 
+            width: 50vw;          /* 必须指定高度 */
+        }
+        .custom-div {
+            width: 100%;          /* 继承父组件宽度 */
+            height: 50px;         /* 固定高度 */
+            background:  #4a98d0;             /* 浅蓝色 */
+            box-sizing: border-box; /* 确保padding不影响尺寸 */
+        }
+        .plan-list {
+            list-style: none;
+            padding: 0;
+        }
+        .plan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .plan-item button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .plan-item button:hover {
+            background-color: #cc0000;
+        }
+        .button-light-blue {
+            display: inline-block;
+            padding: 5px 15px;
+            font-size: 1em;
+            color: #FFFFFF;
+            background: linear-gradient(135deg, #6EC5FF, #4A98D0);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .button-light-blue:hover {
+            background: linear-gradient(135deg, #4A98D0, #6EC5FF);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .button-light-blue:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .input-modern {
+            display: block;
+            width: 100%;
+            max-width: 400px; /* 设置最大宽度 */
+            padding: 12px 16px;
+            font-size: 1em;
+            color: #FFFFFF;
+            background-color: rgba(255, 255, 255, 0.08); /* 半透明白色背景 */
+            border: 1px solid rgba(255, 255, 255, 0.15); /* 微弱发光边框 */
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* 柔和阴影 */
+        }
+
+        .input-modern:focus {
+            border-color: rgba(0, 184, 255, 0.7); /* 聚焦时的蓝色发光边框 */
+            background-color: rgba(255, 255, 255, 0.1); /* 更亮的背景 */
+            box-shadow: 0 0 10px rgba(0, 184, 255, 0.4); /* 发光效果 */
+        }
+
+        .input-modern::placeholder {
+            color: rgba(255, 255, 255, 0.6); /* 占位符文字颜色 */
+            transition: color 0.3s ease;
+        }
+
+        .input-modern:focus::placeholder {
+            color: rgba(255, 255, 255, 0.4); /* 聚焦时占位符变淡 */
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="user-panel">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">当前用户：Admin</span>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 功能导航 -->
+    <div class="plan">
+        <h1 class="nav-item">计划列表</h1>
+        <input id="plan-input" type="text" class="input-modern" placeholder="请输入计划内容">
+        <div><button class="button-light-blue" onclick="addPlan()">添加计划</button><button class="button-light-blue" onclick="selectPlan()">刷新计划</button></div>
+        <!-- 功能卡片 -->
+        <ul id="plan-list" class="plan-list">
+        </ul>
+        
+    </div>
+    <script>
+        let username;
+        function fetchUserInfo() {
+            fetch('/api/get_username', {
+                method: 'GET',
+            })
+            .then(handleResponse)
+            .then(updateUI);
+        }
+        function handleResponse(response) {
+            if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+            return response.json();
+        }
+        function updateUI(data) {
+            username=data.username;
+            document.querySelector('.username').textContent = `当前用户：${data.username}`;
+        }
+        document.addEventListener('DOMContentLoaded', fetchUserInfo);
+        document.addEventListener('DOMContentLoaded', selectPlan);
+        
+        // 获取 DOM 元素
+        const planInput = document.getElementById('plan-input');
+        const planList = document.getElementById('plan-list');
+
+        // 添加计划
+        function addPlan() {
+            const planText = planInput.value.trim(); // 获取输入框的值并去除首尾空格
+            const plan={
+                username:username,
+                planname:planText,
+            }
+            if (planText === '') {
+                alert('请输入计划内容！');
+                return;
+            }
+
+            // 创建一个新的计划项
+            const li = document.createElement('li');
+            li.className = 'plan-item';
+
+            // 设置计划文本
+            li.innerHTML = `
+                <div>${planText}</div>
+                <button onclick="deletePlan(this)">删除</button>
+            `;
+
+            // 将计划项添加到列表中
+            planList.appendChild(li);
+
+            // 清空输入框
+            planInput.value = '';
+            fetch("/diary_work/add_plan",{
+                method:'POST',
+                headers: {
+                    'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                },
+                body: JSON.stringify(plan)
+            }).then(res=>{
+                if (!res.ok){
+                    alert(`删除错误,状态码${res.status}`)
+                }
+            })
+        }
+
+        // 删除计划
+        function deletePlan(button) {
+            const planItem = button.parentElement; // 获取父元素（即整个计划项）
+            
+            const plan={
+                username:username,
+                planname:planItem.children[0].textContent,
+            }
+            planList.removeChild(planItem); // 从列表中移除该计划项
+            fetch("/diary_work/delete_plan",{
+                method:'POST',
+                headers: {
+                    'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                },
+                body: JSON.stringify(plan)
+            }).then(res=>{
+                if (!res.ok){
+                    alert(`删除错误,状态码${res.status}`)
+                }
+            })
+        }
+        function selectPlan(){
+            planList.replaceChildren();
+            fetch("/diary_work/select_plan").then(res =>{
+                if (res.ok){
+                    return res.json()
+                }else {
+                // 如果响应失败，抛出错误
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+            }).then(data=>{
+                for (let i=0;i<data.length;i++){
+                    const li = document.createElement('li');
+                    li.className = 'plan-item';
+                    // 设置计划文本
+                    li.innerHTML = `
+                        <div>${data[i].planname}</div>
+                        <button onclick="deletePlan(this)">删除</button>
+                    `;
+                    planList.appendChild(li)
+                }
+            })
+        }
+    </script>
+</body>
+</html>

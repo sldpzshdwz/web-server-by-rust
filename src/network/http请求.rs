@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
-use crate::log::{日志生产者, 日志级别};
+use crate::tool::log::{日志生产者, 日志级别};
 
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,Clone)]
 pub enum 请求方法{
     GET,
     POST,
@@ -12,7 +12,7 @@ pub enum 请求方法{
     NONE
 }
 
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,Clone)]
 pub enum http协议版本{
     HTTP1_0,
     HTTP1_1,
@@ -21,7 +21,7 @@ pub enum http协议版本{
     NONE
 }
 
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,Clone)]
 pub struct 请求行{
     pub 请求方法:请求方法,
     pub url:String,
@@ -69,7 +69,7 @@ impl 请求行{
         }
     }
 }
-#[derive(PartialEq,Debug)]
+#[derive(PartialEq,Debug,Clone)]
 pub struct http请求{
     pub 请求行:请求行,
     pub 请求头部:HashMap<String,String>,

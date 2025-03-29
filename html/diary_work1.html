@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9CB3C9;
+            margin-left: auto; /* 推至右侧 */
+            padding-right: 30px;
+        }
+        .user-panel i {
+            font-size: 1.4em;
+            color: #4AB3F4;
+        }
+        .username {
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+        .user-panel:hover .username {
+            color: #4AB3F4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+
+        /* 导航容器 */
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .function-icon {
+            font-size: 2.5em;
+            color: #10d642;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+
+
+        .function-title {
+            color: #1999de;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        /* 顶部导航 */
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+        .plan {
+            display: flex;
+            flex-direction: column;  /* 垂直排列 */
+            gap: 10px;               /* 元素间距 */
+            align-items: flex-start;     /* 水平居中 */
+            height: 80vh; 
+            width: 50vw;          /* 必须指定高度 */
+        }
+        .custom-div {
+            width: 100%;          /* 继承父组件宽度 */
+            height: 50px;         /* 固定高度 */
+            background:  #4a98d0;             /* 浅蓝色 */
+            box-sizing: border-box; /* 确保padding不影响尺寸 */
+        }
+        .plan-list {
+            list-style: none;
+            padding: 0;
+        }
+        .plan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .plan-item button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .plan-item button:hover {
+            background-color: #cc0000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="user-panel">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">当前用户：Admin</span>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 功能导航 -->
+    <div class="plan">
+        <h1 class="nav-item">计划列表</h1>
+        <!-- 功能卡片 -->
+        <ul id="plan-list" class="plan-list">
+        </ul>
+        
+    </div>
+    <script>
+        let username;
+        function fetchUserInfo() {
+            fetch('/api/get_username', {
+                method: 'GET',
+            })
+            .then(handleResponse)
+            .then(updateUI);
+        }
+        function handleResponse(response) {
+            if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
+            return response.json();
+        }
+        function updateUI(data) {
+            username=data.username;
+            document.querySelector('.username').textContent = `当前用户：${data.username}`;
+        }
+        document.addEventListener('DOMContentLoaded', fetchUserInfo);
+        // 获取 DOM 元素
+        const planInput = document.getElementById('plan-input');
+        const planList = document.getElementById('plan-list');
+        function start(){
+            selectPlan();
+            
+        }
+        function selectPlan(){
+            planList.replaceChildren();
+            fetch("/diary_work/select_plan").then(res =>{
+                if (res.ok){
+                    return res.json()
+                }else {
+                // 如果响应失败，抛出错误
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+            }).then(data=>{
+                for (let i=0;i<data.length;i++){
+                    const li = document.createElement('li');
+                    li.className = 'plan-item';
+                    // 设置计划文本
+                    li.innerHTML = `
+                        <div>${data[i].planname}</div>
+                        <input type="checkbox" id="myCheckbox">
+                    `;
+                    planList.appendChild(li)
+                }
+                addChangeEvent();
+            }).catch(error=>{
+                console.log(error);
+            })
+        }
+        function addChangeEvent(){
+            let planListChird=planList.children;
+            for (let i=0;i<planListChird.length;i++){
+                let text=planListChird[i].children[0].textContent;
+                const now = new Date();
+
+                // 提取年、月、日
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0'); // 月份从 0 开始，需加 1
+                const day = String(now.getDate()).padStart(2, '0');
+
+                // 拼接成 MySQL 格式
+                const formattedDate = `${year}-${month}-${day}`;
+                console.log(text);
+                let plan_change={
+                    planname: text,
+                    username: username,
+                    date: formattedDate
+                }
+                fetch("/diary_work/select_solve_plan",{
+                    method:'POST',
+                    headers: {
+                        'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                    },
+                    body: JSON.stringify(plan_change)
+                }).then(response=>{
+                    if (response.ok){
+                        return response.json();
+                    }
+                }).then(data=>{
+                    if (data>0){
+                        planListChird[i].children[1].checked = true;
+                    }
+                }).catch(error=>{
+                    console.log(error)
+                }).finally(()=>{
+                    
+                planListChird[i].children[1].addEventListener('change', function(event) {
+                    if (event.target.checked) {
+                        // 勾选时触发的函数
+                        fetch("/diary_work/solve_plan",{
+                            method:'POST',
+                            headers: {
+                                'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                            },
+                            body: JSON.stringify(plan_change)
+                            
+                        }).then().catch(error=>{
+                        console.log(error);
+                        })
+                    } else {
+                        // 取消勾选时触发的函数
+                        fetch("/diary_work/revoke_solve_plan",{
+                            method:'POST',
+                            headers: {
+                                'Content-Type': 'application/json' // 指定发送的是 JSON 数据
+                            },
+                            body: JSON.stringify(plan_change)
+                            
+                        }).then().catch(error=>{
+                        console.log(error);
+                        })
+                    }
+                });
+                });
+                    
+
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', start);
+        //document.addEventListener('DOMContentLoaded', addChangeEvent);
+    </script>
+</body>
+</html>

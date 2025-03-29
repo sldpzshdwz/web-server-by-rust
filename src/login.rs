@@ -3,8 +3,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use cookie::Cookie;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use crate::log::{日志生产者, 日志级别};
+use crate::tool::log::{日志生产者, 日志级别};
 use crate::network::http请求::{self, 请求方法};
+use crate::tool::tool::解析请求体json数据为结构体;
 use mysql::prelude;
 use mysql::{self,params, prelude::Queryable};
 #[derive(Serialize, Deserialize, Debug)]
@@ -12,11 +13,11 @@ struct 登录信息{
     username:String,
     password:String,
 }
-#[derive(Clone)]
+#[derive(Clone,Serialize)]
 pub struct 数据库登录查询信息{
-    username:String,
-    password:String,
-    permissions:String,
+    pub username:String,
+    pub password:String,
+    pub permissions:String,
 }
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -35,17 +36,25 @@ pub fn 解析cookie中的jwt令牌(http请求:&http请求::http请求,用户:&mu
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_secs();
-        日志生产者::写入日志(format!("当前时间戳:{} {:?}",当前时间戳,token.claims), 日志级别::DEBUG);
+        *用户=Some(数据库登录查询信息{
+            username:token.claims.username.clone(),
+            password:token.claims.password.clone(),
+            permissions:token.claims.permissions.clone()
+        });
+        
+        //日志生产者::写入日志(format!("当前时间戳:{} {:?}",当前时间戳,token.claims), 日志级别::DEBUG);
     }else {
         return Err("错误,没有cookie信息".into());
     }
     Ok(())
 }
 pub fn 处理api_login请求(http请求:http请求::http请求)->Result<(数据库登录查询信息,String),Box<dyn Error>>{
-    let http请求体合并=&http请求.请求体.join("\r\n");
-    let 登录信息:登录信息=serde_json::from_str(http请求体合并)?;
+    // let http请求体合并=&http请求.请求体.join("\r\n");
+    // let 登录信息:登录信息=serde_json::from_str(http请求体合并)?;
     //查询登录信息是否在数据库中存在(登录信息)
-    let mut conn = crate::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
+    let 登录信息:登录信息=解析请求体json数据为结构体::<登录信息>(&http请求)?;
+
+    let mut conn = crate::tool::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
     let 查询结果=conn.exec_map(r"select username,password,permissions from users where username=:username",params!{
             "username"=>登录信息.username
         },
@@ -66,7 +75,7 @@ pub fn 处理api_login请求(http请求:http请求::http请求)->Result<(数据�
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_secs();
-    let 过期时间戳=当前时间戳+5*60;
+    let 过期时间戳=当前时间戳+20*60;
     let my_claims=Claims{
         username:查询结果[0].username.clone(),
         password:查询结果[0].password.clone(),
@@ -83,7 +92,7 @@ pub fn 处理api_register请求(http请求:http请求::http请求)->Result<(),Bo
     let http请求体合并=&http请求.请求体.join("\r\n");
     let 注册信息:登录信息=serde_json::from_str(http请求体合并)?;
     //查询登录信息是否在数据库中存在(登录信息)
-    let mut conn = crate::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
+    let mut conn = crate::tool::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
     conn.exec_drop(r"insert into users (username,password,permissions) values (:username,:password,:permissions)", params!{
         "username"=>注册信息.username,
         "password"=>注册信息.password,
@@ -94,8 +103,6 @@ pub fn 处理api_register请求(http请求:http请求::http请求)->Result<(),Bo
 }
 #[cfg(test)]
 mod test{
-    
-
     use mysql::Params;
 
     use crate::数据库连接url;
@@ -110,7 +117,7 @@ mod test{
     }
     #[test]
     fn 测试连接mysql数据库(){
-        let mut conn = crate::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
+        let mut conn = crate::tool::database::数据库连接池::get_instance().lock().unwrap().get_conn().unwrap();
         conn.exec_drop(r#"delete from users where username='keqing'"#,Params::Empty).unwrap();
         conn.exec_drop(r"insert into users (username,password,permissions) values (:username,:password,:permissions)", params!{
             "username"=>"keqing",
@@ -131,11 +138,3 @@ mod test{
         assert_eq!(测试登录信息[0].permissions,"管理员".to_string());
     }
 }
-/*
-CREATE TABLE users (
-    username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL, -- 实际应用中请确保对密码进行加密处理
-    permissions VARCHAR(255) NOT NULL,
-    PRIMARY KEY (username)
-);
- */
