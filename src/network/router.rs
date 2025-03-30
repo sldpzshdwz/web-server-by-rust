@@ -80,7 +80,6 @@ pub fn router_post_api(用户:Option<数据库登录查询信息>,mut stream:Tcp
                 Ok((用户信息,jwt_token))=>{
                     let cookie = Cookie::build(("jwt",jwt_token))
                         .path("/")
-                        .secure(true)
                         .max_age(cookie::time::Duration::minutes(20));
                     let 回复报文=根据信息回复http报文(&("HTTP/1.1 200 OK\r\nSet-Cookie: ".to_string()+&cookie.to_string())[..], r#"{"message":"成功"}"#.to_string());
                     
