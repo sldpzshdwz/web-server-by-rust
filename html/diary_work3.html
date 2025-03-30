@@ -306,6 +306,7 @@
 
             // 填充当月的天数
             for (let day = 1; day <= daysInMonth; day++) {
+                let complete=false;
                 const dayElement = document.createElement('div');
                 dayElement.classList.add('day');
                 const year_str =String(year)
@@ -342,14 +343,21 @@
                     // 如果是今天的日期，添加特殊样式
 
                     calendarElement.appendChild(dayElement);
+                  
                 }).catch(error=>{
                     console.log(error)
+                    complete=true;
                 });
-                await sleep(2);
-                
+                const intervalId = setInterval(() => {
+                if (complete) {
+                    clearInterval(intervalId); // 停止轮询
+                    console.log("Fetch 完成，停止轮询");
+                } else {
+                    console.log("仍在轮询...");
+                }
+                },10);
             }
         }
-
         
     </script>
 </body>
