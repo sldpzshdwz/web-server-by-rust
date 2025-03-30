@@ -334,7 +334,7 @@
                 }).then(()=>{
                     // 设置日期文本
                     dayElement.textContent = day+`  ${complete_work}/${total_work}`;
-
+                    if (total_work===100)dayElement.textContent = day;
                     // 检查当天是否有计划完成数据
                     if (complete_work>=total_work) {
                         dayElement.classList.add('completed'); // 完成的计划

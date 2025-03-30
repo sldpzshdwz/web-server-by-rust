@@ -143,7 +143,7 @@ pub fn 查询某日的完成任务情况api(http请求:http请求)->结果<(i32,
         num
     })?;
     if (查询结果.len()==0){
-        return Ok((0,1));
+        return Ok((1,100));
     }
     Ok(查询结果[0])
 }
