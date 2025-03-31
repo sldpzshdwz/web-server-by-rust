@@ -49,6 +49,14 @@ pub fn router(mut stream:TcpStream,http请求:http请求){
                     router_get_diary_work(用户,stream, http请求,切割结果);
                 }
             },
+            "memory"=>{
+                if 切割结果.len()<=2{
+                    let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/memory.html");
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                }else{
+                    router_get_memory(用户,stream, http请求,切割结果);
+                }
+            }
             "api"=>{
                 router_get_api(用户,stream,http请求,切割结果);
             },
@@ -233,3 +241,13 @@ pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stre
     }
 }
 
+pub fn router_get_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    
+    match 切割结果[2]{
+        
+        _=>{
+            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
+            stream.write_all(回复报文.as_bytes()).unwrap();
+        }
+    }
+}

@@ -342,20 +342,13 @@
                     }
                     // 如果是今天的日期，添加特殊样式
 
-                    calendarElement.appendChild(dayElement);
+                    
                   
                 }).catch(error=>{
                     console.log(error)
                     complete=true;
                 });
-                const intervalId = setInterval(() => {
-                if (complete) {
-                    clearInterval(intervalId); // 停止轮询
-                    console.log("Fetch 完成，停止轮询");
-                } else {
-                    console.log("仍在轮询...");
-                }
-                },10);
+                calendarElement.appendChild(dayElement);
             }
         }
         
