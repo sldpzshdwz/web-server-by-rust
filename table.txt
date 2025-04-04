@@ -25,3 +25,21 @@ CREATE TABLE plan_work_data (
     total_plan INT,
     complete_plan INT
 )
+
+CREATE TABLE memory (
+    username VARCHAR(255) NOT NULL,
+    `key` VARCHAR(255) NOT NULL,
+    value VARCHAR(255) NOT NULL,
+    option1 VARCHAR(255) NOT NULL,
+    option2 VARCHAR(255) NOT NULL,
+    option3 VARCHAR(255) NOT NULL
+)
+
+CREATE TABLE memory_review (
+    username VARCHAR(255) NOT NULL,
+    `key` VARCHAR(255) NOT NULL,
+    date DATE, 
+    epoch INT  
+) 
+date--复习的日期
+epoch--第几次复习

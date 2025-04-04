@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板 - 记忆复习</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 完全保留原有样式 */
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9CB3C9;
+            margin-left: auto;
+            padding-right: 30px;
+        }
+        .user-panel i {
+            font-size: 1.4em;
+            color: #4AB3F4;
+        }
+        .username {
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+        .user-panel:hover .username {
+            color: #4AB3F4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .function-card {
+            background: #16213E;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #2A3F54;
+        }
+        .function-card:hover {
+            transform: translateY(-5px);
+            background: #1A2A3F;
+            box-shadow: 0 8px 25px #2554c11a;
+        }
+        .function-icon {
+            font-size: 2.5em;
+            color: #10d642;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+        .function-card:hover .function-icon {
+            color: #d25524;
+        }
+        .function-title {
+            color: #1999de;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+
+        /* 复习功能特有样式（与原有风格一致） */
+        .review-card {
+            background: #16213E;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 1px solid #2A3F54;
+        }
+        .memory-question {
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4AB3F4;
+            font-size: 1.2em;
+        }
+        .memory-answers {
+            margin: 15px 0;
+        }
+        .memory-answer {
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(74, 179, 244, 0.1);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .memory-answer:hover {
+            background: rgba(74, 179, 244, 0.2);
+        }
+        .memory-answer.selected {
+            background: rgba(216, 216, 0, 0.3);
+        }
+        .memory-answer.correct {
+            background: rgba(16, 214, 66, 0.2);
+            border-left: 3px solid #10d642;
+        }
+        .memory-answer.incorrect {
+            background: rgba(255, 0, 0, 0.2);
+            border-left: 3px solid #ff0000;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
+        }
+        .feedback.correct {
+            background: rgba(16, 214, 66, 0.1);
+            color: #10d642;
+            display: block;
+            border-left: 3px solid #10d642;
+        }
+        .feedback.incorrect {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff6b6b;
+            display: block;
+            border-left: 3px solid #ff0000;
+        }
+        .next-btn {
+            background: #4AB3F4;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 25px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            display: none;
+            transition: all 0.3s;
+        }
+        .next-btn:hover {
+            background: #3a9bd5;
+        }
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #9CB3C9;
+        }
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 完全相同的顶部导航栏 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="user-panel">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">当前用户：Admin</span>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 复习功能内容 -->
+    <div class="nav-container">
+        <div id="reviewContainer">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i> 加载题目中...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUsername = "default_user";
+        
+        // 获取用户信息
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch('/api/get_username');
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                const data = await response.json();
+                currentUsername = data.username;
+                document.querySelector('.username').textContent = `当前用户：${data.username}`;
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+        
+        // 获取单个复习题目
+        async function fetchReviewQuestion() {
+            try {
+                const response = await fetch('/memory/get_memory_review', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: currentUsername })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('获取题目失败');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                throw error;
+            }
+        }
+        
+        // 显示题目
+        async function showQuestion() {
+            const container = document.getElementById('reviewContainer');
+            container.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> 加载题目中...</div>';
+            
+            try {
+                const question = await fetchReviewQuestion();
+                
+                // 创建选项数组并打乱顺序
+                const options = [
+                    question.value,
+                    question.option1,
+                    question.option2,
+                    question.option3
+                ];
+                shuffleArray(options);
+                
+                // 构建HTML
+                let optionsHTML = '';
+                options.forEach((option, i) => {
+                    optionsHTML += `
+                        <div class="memory-answer" 
+                             data-option="${option.replace(/"/g, '&quot;')}" 
+                             onclick="selectOption(this, '${question.value.replace(/"/g, '&quot;')}')">
+                            ${option}
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = `
+                    <div class="review-card">
+                        <div class="memory-question">${question.key}</div>
+                        <div class="memory-answers">${optionsHTML}</div>
+                        <div id="feedback" class="feedback"></div>
+                        <button id="nextBtn" class="next-btn" onclick="showQuestion()">
+                            下一题 <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="function-card">
+                        <div class="function-title">加载失败</div>
+                        <div class="function-desc">${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 选择选项
+        function selectOption(element, correctAnswer) {
+            if (element.classList.contains('selected')) return;
+            
+            const selectedValue = element.getAttribute('data-option');
+            const isCorrect = selectedValue === correctAnswer;
+            
+            // 标记所有选项的正确/错误状态
+            document.querySelectorAll('.memory-answer').forEach(opt => {
+                opt.classList.remove('selected', 'correct', 'incorrect');
+                if (opt.getAttribute('data-option') === correctAnswer) {
+                    opt.classList.add('correct');
+                } else if (opt.getAttribute('data-option') === selectedValue) {
+                    opt.classList.add('incorrect');
+                }
+            });
+            
+            // 显示反馈
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = isCorrect ? 
+                '✓ 回答正确！' : 
+                `✗ 回答错误！正确答案是: ${correctAnswer}`;
+            feedback.className = isCorrect ? 'feedback correct' : 'feedback incorrect';
+            
+            // 显示下一题按钮
+            document.getElementById('nextBtn').style.display = 'block';
+        }
+        
+        // 打乱数组顺序
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserInfo();
+            showQuestion();
+        });
+    </script>
+</body>
+</html>

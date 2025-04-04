@@ -124,6 +124,54 @@
             color: #4AB3F4;
             background: rgba(74, 179, 244, 0.1);
         }
+        .input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 800px;
+            margin: 50px auto;
+        }
+        .input-box {
+            background: #16213E;
+            border: 1px solid #2A3F54;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1em;
+            color: #9CB3C9;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .input-box:focus {
+            border-color: #4AB3F4;
+        }
+        .submit-btn {
+            background: #4AB3F4;
+            color: #0A1426;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .submit-btn:hover {
+            background: #1999de;
+        }
+        .response-area {
+            background: #16213E;
+            border: 1px solid #2A3F54;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 20px auto;
+            color: #9CB3C9;
+            line-height: 1.6;
+            overflow:auto;
+            white-space:pre-wrap
+        }
+        .response-area p {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -163,32 +211,72 @@
 
     <!-- 功能导航 -->
     <div class="nav-container">
-        <div class="function-grid">
-            <!-- 功能卡片 -->
-            <a href="/diary_work" class="function-card">
-                <i class="fas fa-cog function-icon"></i>
-                <h3 class="function-title">每日计划</h3>
-                <p class="function-desc">管理每日计划的完成情况</p>
-            </a>
-
-            <a href="/memory" class="function-card">
-                <i class="fas fa-users-cog function-icon"></i>
-                <h3 class="function-title">记忆背诵</h3>
-                <p class="function-desc">强化记忆背诵知识</p>
-            </a>
-
-            <a href="#" class="function-card">
-                <i class="fas fa-shield-alt function-icon"></i>
-                <h3 class="function-title">代币经济管理</h3>
-                <p class="function-desc">代币经济管理的赏罚</p>
-            </a>
-
-            <a href="/ai" class="function-card">
-                <i class="fas fa-robot function-icon"></i>
-                <h3 class="function-title">智能助手</h3>
-                <p class="function-desc">智能助手,辅助操作系统</p>
-            </a>
+        <!-- 回答区域 -->
+         
+        <p class="response-area" id="response-area">
+        </p>
+        
+        <div class="input-area">
+            <textarea class="input-box" id="question-input" placeholder="请输入您的问题..."></textarea>
+            <button class="submit-btn" id="submit-btn">提交问题</button>
         </div>
     </div>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", () => {
+        // 获取 DOM 元素
+            const questionInput = document.getElementById("question-input");
+            const submitBtn = document.getElementById("submit-btn");
+            const responseArea = document.getElementById("response-area");
+            // 绑定提交按钮的点击事件
+            submitBtn.addEventListener("click", async () => {
+                // 获取用户输入的问题
+                submitBtn.disabled = true;
+                submitBtn.textContent = "正在提交...";
+                const question = questionInput.value.trim();
+
+                // 检查输入是否为空
+                if (!question) {
+                    alert("请输入您的问题！");
+                    return;
+                }
+
+                // 准备请求数据
+                const requestData = JSON.stringify({ question });
+
+                try {
+                    // 发送 POST 请求到后端
+                    const response = await fetch("/ai/question", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json", // 设置请求头为 JSON
+                        },
+                        body: requestData, // 请求体为 JSON 字符串
+                    });
+                        
+                    // 检查响应状态
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // 解析响应数据（假设响应体是一个字符串）
+                    const responseData = await response.text();
+
+                    // 将响应数据显示到回答区域
+                    console.log("原始响应数据:", responseData);
+                    // let p=document.createElement('p');
+                    responseArea.innerHTML = String(responseData);
+                    //responseArea.textContent = responseData;
+                    
+
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "提交问题";
+                    } catch (error) {
+                        // 捕获错误并显示到回答区域
+                        responseArea.innerText = `请求失败: ${error.message}`;
+                }
+            });
+        });
+    </script>
 </body>
 </html>

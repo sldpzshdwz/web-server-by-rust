@@ -1,5 +1,5 @@
 use std::{io::Write, net::TcpStream, thread, time::Duration};
-use crate::{tool::tool::解析请求体json数据为结构体, url::diary_work::{self, 调整计划::{删除计划api, 增加计划api, 寻找所有计划, 提交完成计划api, 撤销完成计划api, 查询完成计划api, 查询某日的完成任务情况api}}};
+use crate::{tool::tool::解析请求体json数据为结构体, url::{ai::question_api, diary_work::{self, 调整计划::{删除计划api, 增加计划api, 寻找所有计划, 提交完成计划api, 撤销完成计划api, 查询完成计划api, 查询某日的完成任务情况api}}, memory::{删除记忆选项, 删除记忆选项api, 增加记忆选项, 增加记忆选项api, 查找记忆选项, 获取复习记忆选项}}};
 use cookie::{ time, Cookie};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -60,6 +60,14 @@ pub fn router(mut stream:TcpStream,http请求:http请求){
             "api"=>{
                 router_get_api(用户,stream,http请求,切割结果);
             },
+            "ai"=>{
+                if 切割结果.len()<=2{
+                    let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/ai.html");
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                }else{
+                    router_get_ai(用户,stream,http请求,切割结果);
+                }
+            },
             _=>{
                 let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
                 stream.write_all(回复报文.as_bytes()).unwrap();
@@ -72,10 +80,34 @@ pub fn router(mut stream:TcpStream,http请求:http请求){
             "diary_work"=>{
                 router_post_diary_work(用户,stream,http请求,切割结果);
             }
+            "ai"=>{
+                router_post_ai(用户,stream,http请求,切割结果);
+            }
+            "memory"=>{
+                router_post_memory(用户,stream, http请求,切割结果);
+            }
             _=>{
 
             }
         }
+        _=>{
+
+        }
+    }
+}
+pub fn router_post_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        "question"=>{
+            match question_api(http请求,用户.unwrap()){
+                Ok(回应报文)=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap());
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                },
+                Err(error)=>{
+                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
+                }
+            }
+        },
         _=>{
 
         }
@@ -119,6 +151,14 @@ pub fn router_post_api(用户:Option<数据库登录查询信息>,mut stream:Tcp
         }
         _=>{
 
+        }
+    }
+}
+pub fn router_get_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        _=>{
+            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
+            stream.write_all(回复报文.as_bytes()).unwrap();
         }
     }
 }
@@ -240,11 +280,72 @@ pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stre
         }
     }
 }
-
+pub fn router_post_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        "add_memory"=>{
+            match 增加记忆选项api(用户.unwrap(),http请求){
+                Ok(())=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                },
+                Err(error)=>{
+                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
+                }
+            };
+        }
+        "delete_memory"=>{
+            match 删除记忆选项api(用户.unwrap(),http请求){
+                Ok(())=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                },
+                Err(error)=>{
+                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
+                }
+            };
+        }
+        "select_memory"=>{
+            //日志生产者::写入日志("查找记忆选项".to_string(), 日志级别::ERROR);
+            match 查找记忆选项(用户.unwrap(),http请求) {
+                Ok(记忆选项)=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&记忆选项).unwrap());
+                    日志生产者::写入日志(回复报文.clone(), 日志级别::DEBUG);
+                    stream.write_all(回复报文.as_bytes()).unwrap(); 
+                }
+                Err(error)=>{
+                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR); 
+                }   
+            }
+        }
+        "get_memory_review"=>{
+            match 获取复习记忆选项(用户.unwrap(),http请求) {
+                Ok(记忆选项)=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&记忆选项).unwrap());
+                    日志生产者::写入日志(回复报文.clone(), 日志级别::DEBUG);
+                    stream.write_all(回复报文.as_bytes()).unwrap(); 
+                }
+                Err(error)=>{
+                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR); 
+                }   
+            }
+        }
+        _=>{
+            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
+            stream.write_all(回复报文.as_bytes()).unwrap();
+        }
+    }
+}
 pub fn router_get_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     
     match 切割结果[2]{
-        
+        "memory1"=>{
+            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/memory1.html");
+            stream.write_all(回复报文.as_bytes()).unwrap();
+        }
+        "memory2"=>{
+            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/memory2.html");
+            stream.write_all(回复报文.as_bytes()).unwrap();
+        }
         _=>{
             let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
             stream.write_all(回复报文.as_bytes()).unwrap();

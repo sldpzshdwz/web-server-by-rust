@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>系统导航面板 - 记忆选项管理</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 保留原有样式... */
+        .user-panel {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9CB3C9;
+            margin-left: auto;
+            padding-right: 30px;
+        }
+        .user-panel i {
+            font-size: 1.4em;
+            color: #4AB3F4;
+        }
+        .username {
+            font-size: 0.95em;
+            transition: color 0.3s;
+        }
+        .user-panel:hover .username {
+            color: #4AB3F4;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: #0A1426;
+            color: #FFFFFF;
+            min-height: 100vh;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+        .function-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        .function-card {
+            background: #16213E;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #2A3F54;
+        }
+        .function-card:hover {
+            transform: translateY(-5px);
+            background: #1A2A3F;
+            box-shadow: 0 8px 25px #2554c11a;
+        }
+        .function-icon {
+            font-size: 2.5em;
+            color: #10d642;
+            margin-bottom: 20px;
+            transition: color 0.3s;
+        }
+        .function-card:hover .function-icon {
+            color: #d25524;
+        }
+        .function-title {
+            color: #1999de;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+        .function-desc {
+            color: #9CB3C9;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        .top-nav {
+            background: #16213E;
+            padding: 20px 50px;
+            margin-bottom: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        .brand {
+            font-size: 24px;
+            color: #4AB3F4;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+        .nav-item {
+            color: #9CB3C9;
+            cursor: pointer;
+            padding: 10px;
+            transition: all 0.3s;
+            border-radius: 6px;
+        }
+        .nav-item:hover {
+            color: #4AB3F4;
+            background: rgba(74, 179, 244, 0.1);
+        }
+
+        /* 新增记忆选项样式 */
+        .memory-option {
+            background: #1A2A3F;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+            border: 1px solid #2A3F54;
+        }
+        .memory-question {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4AB3F4;
+        }
+        .memory-answers {
+            margin: 10px 0;
+        }
+        .memory-answer {
+            padding: 5px;
+            margin: 3px 0;
+            background: rgba(74, 179, 244, 0.1);
+            border-radius: 4px;
+        }
+        .correct-answer {
+            background: rgba(16, 214, 66, 0.2);
+            border-left: 3px solid #10d642;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #d25524;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .add-btn {
+            background: #10d642;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 20px;
+            cursor: button;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .add-btn:hover {
+            background: #0db837;
+            transform: translateY(-2px);
+        }
+        .memory-form {
+            background: #1A2A3F;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #9CB3C9;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #2A3F54;
+            background: #0A1426;
+            color: white;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .form-actions button {
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        .save-btn {
+            background: #4AB3F4;
+            color: white;
+        }
+        .cancel-btn {
+            background: #9CB3C9;
+            color: #0A1426;
+        }
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+        <div class="brand">SYSTEM NAV</div>
+        <div class="user-panel">
+            <i class="fas fa-user-circle"></i>
+            <span class="username">当前用户：Admin</span>
+        </div>
+        <div class="nav-menu">
+            <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
+            <div class="nav-item">文档</div>
+            <div class="nav-item">设置</div>
+            <div class="nav-item">帮助</div>
+        </div>
+    </nav>
+
+    <!-- 功能导航 -->
+    <div class="nav-container">
+        <button class="add-btn" onclick="showAddForm()">
+            <i class="fas fa-plus"></i> 新增记忆选项
+        </button>
+        
+        <div class="memory-form" id="memoryForm">
+            <div class="form-group">
+                <label for="key">问题/键名:</label>
+                <input type="text" id="key" placeholder="输入问题或键名">
+            </div>
+            <div class="form-group">
+                <label for="value">正确答案:</label>
+                <input type="text" id="value" placeholder="输入正确答案">
+            </div>
+            <div class="form-group">
+                <label for="option1">选项1:</label>
+                <input type="text" id="option1" placeholder="输入选项1">
+            </div>
+            <div class="form-group">
+                <label for="option2">选项2:</label>
+                <input type="text" id="option2" placeholder="输入选项2">
+            </div>
+            <div class="form-group">
+                <label for="option3">选项3:</label>
+                <input type="text" id="option3" placeholder="输入选项3">
+            </div>
+            <div class="form-actions">
+                <button class="cancel-btn" onclick="hideAddForm()">取消</button>
+                <button class="save-btn" onclick="addMemoryOption()">保存</button>
+            </div>
+            <div class="error-message" id="formError"></div>
+        </div>
+        
+        <div class="function-grid" id="memoryOptionsContainer">
+            <!-- 记忆选项将在这里动态添加 -->
+        </div>
+    </div>
+
+    <script>
+        let currentUsername = "default_user";
+        
+        // 封装用户信息获取逻辑
+        async function fetchUserInfo() {
+            try {
+                const response = await fetch('/api/get_username');
+                if (!response.ok) throw new Error(`HTTP错误: ${response.status}`);
+                const data = await response.json();
+                currentUsername = data.username;
+                document.querySelector('.username').textContent = `当前用户：${data.username}`;
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+        
+        // 初始化记忆选项
+        async function initMemoryOptions() {
+            const container = document.getElementById('memoryOptionsContainer');
+            container.innerHTML = '<div>加载中...</div>';
+            
+            try {
+                const response = await fetch('/memory/select_memory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: currentUsername })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`请求失败: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (!Array.isArray(data)) {
+                    throw new Error('返回数据格式不正确');
+                }
+                
+                renderMemoryOptions(data);
+            } catch (error) {
+                console.error('加载记忆选项失败:', error);
+                container.innerHTML = `<div class="error-message">加载失败: ${error.message}</div>`;
+            }
+        }
+        
+        // 渲染记忆选项
+        function renderMemoryOptions(options) {
+            const container = document.getElementById('memoryOptionsContainer');
+            container.innerHTML = '';
+            
+            if (!options || options.length === 0) {
+                container.innerHTML = '<div>暂无记忆选项</div>';
+                return;
+            }
+            
+            options.forEach(option => {
+                const memoryOption = document.createElement('div');
+                memoryOption.className = 'memory-option';
+                
+                memoryOption.innerHTML = `
+                    <div class="memory-question">${option.key}</div>
+                    <div class="memory-answers">
+                        <div class="memory-answer correct-answer">${option.value}</div>
+                        <div class="memory-answer">${option.option1}</div>
+                        <div class="memory-answer">${option.option2}</div>
+                        <div class="memory-answer">${option.option3}</div>
+                    </div>
+                    <button class="delete-btn" onclick="deleteMemoryOption('${option.key}')">
+                        <i class="fas fa-trash"></i> 删除
+                    </button>
+                `;
+                
+                container.appendChild(memoryOption);
+            });
+        }
+        
+        // 显示添加表单
+        function showAddForm() {
+            document.getElementById('memoryForm').style.display = 'block';
+            document.getElementById('formError').textContent = '';
+            document.getElementById('key').focus();
+        }
+        
+        // 隐藏添加表单
+        function hideAddForm() {
+            document.getElementById('memoryForm').style.display = 'none';
+            // 清空表单
+            document.getElementById('key').value = '';
+            document.getElementById('value').value = '';
+            document.getElementById('option1').value = '';
+            document.getElementById('option2').value = '';
+            document.getElementById('option3').value = '';
+        }
+        
+        // 添加记忆选项
+        async function addMemoryOption() {
+            const key = document.getElementById('key').value.trim();
+            const value = document.getElementById('value').value.trim();
+            const option1 = document.getElementById('option1').value.trim();
+            const option2 = document.getElementById('option2').value.trim();
+            const option3 = document.getElementById('option3').value.trim();
+            
+            // 验证输入
+            if (!key || !value || !option1 || !option2 || !option3) {
+                document.getElementById('formError').textContent = '请填写所有字段';
+                return;
+            }
+            
+            const memoryData = {
+                username: currentUsername,
+                key,
+                value,
+                option1,
+                option2,
+                option3
+            };
+            
+            try {
+                const response = await fetch('/memory/add_memory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(memoryData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('添加失败');
+                }
+                
+                hideAddForm();
+                initMemoryOptions(); // 刷新列表
+            } catch (error) {
+                console.error('添加记忆选项失败:', error);
+                document.getElementById('formError').textContent = `添加失败: ${error.message}`;
+            }
+        }
+        
+        // 删除记忆选项
+        async function deleteMemoryOption(key) {
+            if (!confirm('确定要删除这个记忆选项吗？')) return;
+            
+            try {
+                const response = await fetch('/memory/delete_memory', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        username: currentUsername,
+                        key 
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('删除失败');
+                }
+                
+                initMemoryOptions(); // 刷新列表
+            } catch (error) {
+                console.error('删除记忆选项失败:', error);
+                alert(`删除失败: ${error.message}`);
+            }
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchUserInfo();
+            initMemoryOptions();
+        });
+    </script>
+</body>
+</html>
