@@ -1,19 +1,20 @@
 use std::{io::Write, net::TcpStream, thread, time::Duration};
-use crate::{tool::tool::解析请求体json数据为结构体, url::{ai::question_api, diary_work::{self, 调整计划::{删除计划api, 增加计划api, 寻找所有计划, 提交完成计划api, 撤销完成计划api, 查询完成计划api, 查询某日的完成任务情况api}}, memory::{删除记忆选项, 删除记忆选项api, 增加记忆选项, 增加记忆选项api, 查找记忆选项, 获取复习记忆选项}}};
+use crate::{tool::tool::解析请求体json数据为结构体, url::{ai::question_api, diary_work::{self, 调整计划::{删除计划api, 增加计划api, 寻找所有计划, 提交完成计划api, 撤销完成计划api, 查询完成计划api, 查询某日的完成任务情况api}}, memory::{删除记忆选项, 删除记忆选项api, 增加记忆选项, 增加记忆选项api, 查找记忆选项, 获取复习记忆选项}, 结果}};
 use cookie::{ time, Cookie};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 
 use crate::{tool::database::数据库连接池, tool::log::{日志生产者, 日志级别}, login::{处理api_login请求, 处理api_register请求, 数据库登录查询信息,解析cookie中的jwt令牌}};
 
-use super::{http回应::{根据信息回复http报文, 根据文件路径回复http报文}, http请求::{http请求, 请求方法}};
+use super::{http回应::{根据信息回复http报文, 根据文件路径回复http报文, 根据文件路径回复http报文并写入stream}, http请求::{http请求, 请求方法}};
 use std::cell::RefCell;
 
 
 thread_local! {
     static 登录用户:RefCell<Option<数据库登录查询信息>> = RefCell::new(None);
 }
-pub fn router(mut stream:TcpStream,http请求:http请求){
+
+pub fn 处理请求(mut stream:TcpStream,http请求:http请求){
     日志生产者::写入日志("url:".to_string()+&http请求.请求行.url, 日志级别::DEBUG);
     let mut 用户:Option<数据库登录查询信息>=None;
     if http请求.请求行.url.as_str()!="/" && http请求.请求行.url.as_str()!="/register"&& http请求.请求行.url.as_str()!="/api/login"&& http请求.请求行.url.as_str()!="/api/register"{
@@ -22,82 +23,59 @@ pub fn router(mut stream:TcpStream,http请求:http请求){
                 stream.write_all(回复报文.as_bytes()).unwrap();
             return;
         }
-    }
-
+    }//检验登录信息是否正确
     let binding = http请求.clone();
     let 切割结果=binding.请求行.url.as_str().split('/').collect::<Vec<_>>();
+    router(切割结果,http请求,stream,用户);
+}
+//根据文件路径回复http报文并写入stream(,,stream);
+//判断是否是一级url并处理(切割结果,stream,http请求,用户,状态行,正文路径,执行下级路由)
+pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,用户:Option<数据库登录查询信息>){
     match  http请求.请求行.请求方法{
-        
         请求方法::GET=> match 切割结果.clone()[1]{
-            ""=>{
-                let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/login.html");
-                stream.write_all(回复报文.as_bytes()).unwrap();
-            },
-            "register"=>{
-                let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/register.html");
-                stream.write_all(回复报文.as_bytes()).unwrap();
-            },
-            "dashboard"=>{
-                let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/dashboard.html");
-                stream.write_all(回复报文.as_bytes()).unwrap();
-            },
-            "diary_work"=>{
-                if 切割结果.len()<=2{
-                    let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/diary_work.html");
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                }else{
-                    router_get_diary_work(用户,stream, http请求,切割结果);
-                }
-            },
-            "memory"=>{
-                if 切割结果.len()<=2{
-                    let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/memory.html");
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                }else{
-                    router_get_memory(用户,stream, http请求,切割结果);
-                }
-            }
-            "api"=>{
-                router_get_api(用户,stream,http请求,切割结果);
-            },
-            "ai"=>{
-                if 切割结果.len()<=2{
-                    let 回复报文=根据文件路径回复http报文("HTTP/1.1 200 OK","html/ai.html");
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                }else{
-                    router_get_ai(用户,stream,http请求,切割结果);
-                }
-            },
-            _=>{
-                let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-                stream.write_all(回复报文.as_bytes()).unwrap();
-            }
+            ""=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/login.html",stream);},
+            "register"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/register.html",stream);},
+            "dashboard"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/dashboard.html",stream);},
+            "diary_work"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/diary_work.html",router_get_diary_work);},
+            "memory"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/memory.html",router_get_memory);}
+            "api"=>{router_get_api(用户,stream,http请求,切割结果);},
+            "ai"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/ai.html",router_get_ai);},
+            _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
         }
         请求方法::POST=>  match 切割结果.clone()[1]  {
-            "api"=>{
-                router_post_api(用户,stream,http请求,切割结果);
-            }
-            "diary_work"=>{
-                router_post_diary_work(用户,stream,http请求,切割结果);
-            }
-            "ai"=>{
-                router_post_ai(用户,stream,http请求,切割结果);
-            }
-            "memory"=>{
-                router_post_memory(用户,stream, http请求,切割结果);
-            }
-            _=>{
-
-            }
+            "api"=>router_post_api(用户,stream,http请求,切割结果),
+            "diary_work"=>router_post_diary_work(用户,stream,http请求,切割结果),
+            "ai"=>router_post_ai(用户,stream,http请求,切割结果),
+            "memory"=>router_post_memory(用户,stream, http请求,切割结果),
+            _=>{}
         }
         _=>{
+        }
+    }
+}
 
+pub fn 判断是否是一级url并处理(切割结果:Vec<&str>,mut stream:TcpStream,http请求:http请求,用户:Option<数据库登录查询信息>,状态行:&str,正文路径:&str,执行下级路由:fn(Option<数据库登录查询信息>,TcpStream,http请求,Vec<&str>)){
+    if 切割结果.len()<=2{
+        根据文件路径回复http报文并写入stream(状态行, 正文路径, stream);
+    }else{
+        执行下级路由(用户,stream, http请求,切割结果);
+    }
+}
+pub fn 判断api处理是否成功并处理<T,E:ToString>(api结果:Result<T,E>,状态行:&str,信息:String,mut stream:TcpStream){
+    match api结果{
+        Ok(_) => {
+            let 回复报文=根据信息回复http报文(状态行, 信息);
+            stream.write_all(回复报文.as_bytes()).unwrap();
+        }
+        Err(error) => {
+            日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
         }
     }
 }
 pub fn router_post_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
         "question"=>{
+            //判断api处理是否成功并处理(question_api(http请求,用户.unwrap()),"HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap(),stream);
             match question_api(http请求,用户.unwrap()){
                 Ok(回应报文)=>{
                     let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap());

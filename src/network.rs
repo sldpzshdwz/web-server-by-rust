@@ -37,6 +37,6 @@ pub fn 处理http请求(mut stream:TcpStream){
     }
     let mut http请求:http请求::http请求=http请求字符串.into();
 
-    router::router(stream,http请求);
+    router::处理请求(stream,http请求);
     
 }
