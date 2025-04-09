@@ -60,28 +60,28 @@ pub struct 完成计划{
     pub planname:String,
     pub date:String,
 }
-pub fn 更新完成任务情况(完成的计划:完成计划)->结果<()>{
+pub fn 更新完成任务情况(username:&str,date:&str)->结果<()>{
     let mut conn=数据库连接池::get_instance().lock()?.get_conn()?;
     let 任务总数=conn.exec_map(r"select count(*) from plan where username=:username",params!{
-        "username"=>完成的计划.username.clone()
+        "username"=>username
     },
     |num:i32| {
         num
     })?;
     let 完成任务数=conn.exec_map(r"select count(*) from plan_work where username=:username and date=:date",params!{
-        "username"=>完成的计划.username.clone(),
-        "date"=>完成的计划.date.clone(),
+        "username"=>username,
+        "date"=>date,
     },
     |num:i32| {
         num
     })?;
     conn.exec_drop(r"delete from plan_work_data where username=:username and date=:date",params!{
-        "username"=>完成的计划.username.clone(),
-        "date"=>完成的计划.date.clone(),
+        "username"=>username,
+        "date"=>date,
     })?;
     conn.exec_drop(r"insert into plan_work_data (username,date,total_plan,complete_plan) values (:username,:date,:total_plan,:complete_plan)",params!{
-        "username"=>完成的计划.username,
-        "date"=>完成的计划.date,
+        "username"=>username,
+        "date"=>date,
         "total_plan"=>任务总数[0],
         "complete_plan"=>完成任务数[0],
     })?;
@@ -96,7 +96,7 @@ pub fn 提交完成计划api(http请求:http请求)->结果<()>{
         "planname"=>完成的计划.planname,
         "date"=>完成的计划.date,
     })?;
-    更新完成任务情况(完成的计划克隆)?;
+    更新完成任务情况(&完成的计划克隆.username,&完成的计划克隆.date)?;
     Ok(())
 }
 pub fn 撤销完成计划api(http请求:http请求)->结果<()>{
@@ -108,7 +108,7 @@ pub fn 撤销完成计划api(http请求:http请求)->结果<()>{
         "planname"=>完成的计划.planname,
         "date"=>完成的计划.date,
     })?;
-    更新完成任务情况(完成的计划克隆)?;
+    更新完成任务情况(&完成的计划克隆.username,&完成的计划克隆.date)?;
     Ok(())
 }
 pub fn 查询完成计划api(http请求:http请求)->结果<i32>{
