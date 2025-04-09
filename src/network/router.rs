@@ -6,7 +6,7 @@ use std::error::Error;
 
 use crate::{tool::database::数据库连接池, tool::log::{日志生产者, 日志级别}, login::{处理api_login请求, 处理api_register请求, 数据库登录查询信息,解析cookie中的jwt令牌}};
 
-use super::{http回应::{根据信息回复http报文, 根据文件路径回复http报文, 根据文件路径回复http报文并写入stream}, http请求::{http请求, 请求方法}};
+use super::{http回应::{根据信息回复http报文, 根据信息回复http报文并写入stream, 根据文件路径回复http报文, 根据文件路径回复http报文并写入stream}, http请求::{http请求, 请求方法}};
 use std::cell::RefCell;
 
 
@@ -29,6 +29,7 @@ pub fn 处理请求(mut stream:TcpStream,http请求:http请求){
     router(切割结果,http请求,stream,用户);
 }
 //根据文件路径回复http报文并写入stream(,,stream);
+//根据信息回复http报文并写入stream(,,stream);
 //判断是否是一级url并处理(切割结果,stream,http请求,用户,状态行,正文路径,执行下级路由)
 pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,用户:Option<数据库登录查询信息>){
     match  http请求.请求行.请求方法{
@@ -54,102 +55,34 @@ pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,
     }
 }
 
-pub fn 判断是否是一级url并处理(切割结果:Vec<&str>,mut stream:TcpStream,http请求:http请求,用户:Option<数据库登录查询信息>,状态行:&str,正文路径:&str,执行下级路由:fn(Option<数据库登录查询信息>,TcpStream,http请求,Vec<&str>)){
-    if 切割结果.len()<=2{
-        根据文件路径回复http报文并写入stream(状态行, 正文路径, stream);
-    }else{
-        执行下级路由(用户,stream, http请求,切割结果);
-    }
-}
-pub fn 判断api处理是否成功并处理<T,E:ToString>(api结果:Result<T,E>,状态行:&str,信息:String,mut stream:TcpStream){
-    match api结果{
-        Ok(_) => {
-            let 回复报文=根据信息回复http报文(状态行, 信息);
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        }
-        Err(error) => {
-            日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-        }
-    }
-}
+
+//判断api处理是否成功并处理(,"HTTP/1.1 200 OK",,stream);
 pub fn router_post_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
         "question"=>{
-            //判断api处理是否成功并处理(question_api(http请求,用户.unwrap()),"HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap(),stream);
             match question_api(http请求,用户.unwrap()){
                 Ok(回应报文)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
+                    根据信息回复http报文并写入stream("HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap(),stream);
                 },
                 Err(error)=>{
                     日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
                 }
             }
-        },
-        _=>{
-
         }
-    }
-}
-pub fn router_post_api(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
-    match 切割结果[2]{
-        "login"=>{
-            match 处理api_login请求(http请求) {
-                Ok((用户信息,jwt_token))=>{
-                    let cookie = Cookie::build(("jwt",jwt_token))
-                        .path("/")
-                        .max_age(cookie::time::Duration::minutes(20));
-                    let 回复报文=根据信息回复http报文(&("HTTP/1.1 200 OK\r\nSet-Cookie: ".to_string()+&cookie.to_string())[..], r#"{"message":"成功"}"#.to_string());
-                    
-                    日志生产者::写入日志("登录成功,请求报文:\r\n".to_string()+"HTTP/1.1 200 OK\r\nSet-Cookie: "+&cookie.to_string(),日志级别::INFO);
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                }
-                Err(信息)=>{
-                    let 错误信息=format!("{:?}",信息);
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 500 FAIL", r#"{"message":"#.to_owned()+&错误信息+r#"}"#);
-                    日志生产者::写入日志(r#"{"message":"#.to_owned()+&错误信息+r#"}"#,日志级别::INFO);
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                    println!("{信息}");
-                }
-            }
-        }
-        "register"=>{
-            match 处理api_register请求(http请求) {
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK", r#"{"message":"成功"}"#.to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                }
-                Err(信息)=>{
-                    let 错误信息=format!("{:?}",信息);
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 500 FAIL", r#"{"message":"#.to_owned()+&错误信息+r#""}"#);
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                    println!("{信息}");
-                }
-            }
-        }
-        _=>{
-
-        }
+        _=>{}
     }
 }
 pub fn router_get_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
-        _=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        }
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
 pub fn router_get_api(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
         "get_username"=>{
-            let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&用户.unwrap()).unwrap());
-            stream.write_all(回复报文.as_bytes()).unwrap();
+            根据信息回复http报文并写入stream("HTTP/1.1 200 OK",serde_json::to_string(&用户.unwrap()).unwrap(),stream);
         },
-        _=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        }
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
 pub fn router_post_diary_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
@@ -158,8 +91,7 @@ pub fn router_post_diary_work(用户:Option<数据库登录查询信息>,mut str
             日志生产者::写入日志("运行删除api".to_string(), 日志级别::ERROR);
             match 删除计划api(http请求){
                 Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
+                    根据信息回复http报文并写入stream("HTTP/1.1 200 OK","".to_string(),stream);
                 },
                 Err(error)=>{
                     日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
@@ -240,22 +172,10 @@ pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stre
                 }
             }
         },
-        "diary_work1"=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/diary_work1.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        },
-        "diary_work2"=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/diary_work2.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        },
-        "diary_work3"=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/diary_work3.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        },
-        _=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        }
+        "diary_work1"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work1.html",stream);},
+        "diary_work2"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work2.html",stream);},
+        "diary_work3"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work3.html",stream);},
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
 pub fn router_post_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
@@ -307,26 +227,68 @@ pub fn router_post_memory(用户:Option<数据库登录查询信息>,mut stream:
                 }   
             }
         }
-        _=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
-        }
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
 pub fn router_get_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
-    
+
     match 切割结果[2]{
-        "memory1"=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/memory1.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
+        "memory1"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/memory1.html",stream);}
+        "memory2"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/memory2.html",stream);}
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
+    }
+}
+pub fn router_post_api(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        "login"=>{
+            match 处理api_login请求(http请求) {
+                Ok((用户信息,jwt_token))=>{
+                    let cookie = Cookie::build(("jwt",jwt_token))
+                        .path("/")
+                        .max_age(cookie::time::Duration::minutes(20));
+                    let 回复报文=根据信息回复http报文(&("HTTP/1.1 200 OK\r\nSet-Cookie: ".to_string()+&cookie.to_string())[..], r#"{"message":"成功"}"#.to_string());
+                    
+                    日志生产者::写入日志("登录成功,请求报文:\r\n".to_string()+"HTTP/1.1 200 OK\r\nSet-Cookie: "+&cookie.to_string(),日志级别::INFO);
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                }
+                Err(信息)=>{
+                    let 错误信息=format!("{:?}",信息);
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 500 FAIL", r#"{"message":"#.to_owned()+&错误信息+r#"}"#);
+                    日志生产者::写入日志(r#"{"message":"#.to_owned()+&错误信息+r#"}"#,日志级别::INFO);
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                    println!("{信息}");
+                }
+            }
         }
-        "memory2"=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/memory2.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
+        "register"=>{
+            match 处理api_register请求(http请求) {
+                Ok(())=>{
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK", r#"{"message":"成功"}"#.to_string());
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                }
+                Err(信息)=>{
+                    let 错误信息=format!("{:?}",信息);
+                    let 回复报文=根据信息回复http报文("HTTP/1.1 500 FAIL", r#"{"message":"#.to_owned()+&错误信息+r#""}"#);
+                    stream.write_all(回复报文.as_bytes()).unwrap();
+                    println!("{信息}");
+                }
+            }
         }
         _=>{
-            let 回复报文=根据文件路径回复http报文("HTTP/1.1 404 NOT FOUND","html/404.html");
-            stream.write_all(回复报文.as_bytes()).unwrap();
+
         }
+    }
+}
+pub fn 判断是否是一级url并处理(切割结果:Vec<&str>,mut stream:TcpStream,http请求:http请求,用户:Option<数据库登录查询信息>,状态行:&str,正文路径:&str,执行下级路由:fn(Option<数据库登录查询信息>,TcpStream,http请求,Vec<&str>)){
+    if 切割结果.len()<=2{
+        根据文件路径回复http报文并写入stream(状态行, 正文路径, stream);
+    }else{
+        执行下级路由(用户,stream, http请求,切割结果);
+    }
+}
+pub fn 判断api处理是否成功并处理<T,E:ToString>(api结果:Result<T,E>,状态行:&str,信息:String,mut stream:TcpStream){
+    match api结果{
+        Ok(_) => {根据信息回复http报文并写入stream(状态行,信息,stream);}
+        Err(error) => {日志生产者::写入日志(error.to_string(), 日志级别::ERROR);}
     }
 }
