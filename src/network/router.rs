@@ -85,93 +85,25 @@ pub fn router_get_api(用户:Option<数据库登录查询信息>,mut stream:TcpS
         _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
+//判断api处理是否成功并将结果转换成json格式返回(api结果:Result<T,E>,状态行:&str,mut stream:TcpStream)
 pub fn router_post_diary_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
         "delete_plan"=>{
             日志生产者::写入日志("运行删除api".to_string(), 日志级别::ERROR);
-            match 删除计划api(http请求){
-                Ok(())=>{
-                    根据信息回复http报文并写入stream("HTTP/1.1 200 OK","".to_string(),stream);
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
+            判断api处理是否成功并处理(删除计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);
         },
-        "add_plan"=>{
-            match 增加计划api(http请求){
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        },
-        "solve_plan"=>{
-            match 提交完成计划api(http请求){
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        },
-        "revoke_solve_plan"=>{
-            match 撤销完成计划api(http请求){
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        }
-        "select_solve_plan"=>{
-            match 查询完成计划api(http请求){
-                Ok(查询数量)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&查询数量).expect("解析查询数量失败"));
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        }
-        "select_solve_plan_data"=>{
-            match 查询某日的完成任务情况api(http请求){
-                Ok(任务完成情况)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&任务完成情况).expect("解析查询数量失败"));
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        }
-        _=>{
-
-        }
+        "add_plan"=>{判断api处理是否成功并处理(增加计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "solve_plan"=>{判断api处理是否成功并处理(提交完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "revoke_solve_plan"=>{判断api处理是否成功并处理(撤销完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);}
+        "select_solve_plan"=>{判断api处理是否成功并将结果转换成json格式返回(查询完成计划api(http请求),"HTTP/1.1 200 OK",stream);}
+        "select_solve_plan_data"=>{判断api处理是否成功并将结果转换成json格式返回(查询某日的完成任务情况api(http请求),"HTTP/1.1 200 OK",stream);}
+        _=>{}
     }
 }
 pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     
     match 切割结果[2]{
-        "select_plan"=>{
-            match 寻找所有计划(用户.unwrap().username){
-                Ok(result)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&result).expect("寻找所有计划转化为字符串失败"));
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        },
+        "select_plan"=>{判断api处理是否成功并将结果转换成json格式返回(寻找所有计划(用户.unwrap().username),"HTTP/1.1 200 OK",stream);},
         "diary_work1"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work1.html",stream);},
         "diary_work2"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work2.html",stream);},
         "diary_work3"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work3.html",stream);},
@@ -289,6 +221,12 @@ pub fn 判断是否是一级url并处理(切割结果:Vec<&str>,mut stream:TcpSt
 pub fn 判断api处理是否成功并处理<T,E:ToString>(api结果:Result<T,E>,状态行:&str,信息:String,mut stream:TcpStream){
     match api结果{
         Ok(_) => {根据信息回复http报文并写入stream(状态行,信息,stream);}
+        Err(error) => {日志生产者::写入日志(error.to_string(), 日志级别::ERROR);}
+    }
+}
+pub fn 判断api处理是否成功并将结果转换成json格式返回<T: Serialize,E:ToString>(api结果:Result<T,E>,状态行:&str,stream:TcpStream){
+    match api结果{
+        Ok(结果) => {根据信息回复http报文并写入stream(状态行,serde_json::to_string(&结果).unwrap(),stream);}
         Err(error) => {日志生产者::写入日志(error.to_string(), 日志级别::ERROR);}
     }
 }
