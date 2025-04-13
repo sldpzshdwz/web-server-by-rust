@@ -55,20 +55,10 @@ pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,
     }
 }
 
-
 //判断api处理是否成功并处理(,"HTTP/1.1 200 OK",,stream);
 pub fn router_post_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
-        "question"=>{
-            match question_api(http请求,用户.unwrap()){
-                Ok(回应报文)=>{
-                    根据信息回复http报文并写入stream("HTTP/1.1 200 OK",serde_json::to_string(&回应报文).unwrap(),stream);
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            }
-        }
+        "question"=>{判断api处理是否成功并将结果转换成json格式返回(question_api(http请求,用户.unwrap()),"HTTP/1.1 200 OK",stream);}
         _=>{}
     }
 }
@@ -79,13 +69,11 @@ pub fn router_get_ai(用户:Option<数据库登录查询信息>,mut stream:TcpSt
 }
 pub fn router_get_api(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
-        "get_username"=>{
-            根据信息回复http报文并写入stream("HTTP/1.1 200 OK",serde_json::to_string(&用户.unwrap()).unwrap(),stream);
-        },
+        "get_username"=>{根据信息回复http报文并写入stream("HTTP/1.1 200 OK",serde_json::to_string(&用户.unwrap()).unwrap(),stream);},
         _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
-//判断api处理是否成功并将结果转换成json格式返回(api结果:Result<T,E>,状态行:&str,mut stream:TcpStream)
+//判断api处理是否成功并将结果转换成json格式返回(,"HTTP/1.1 200 OK",stream);
 pub fn router_post_diary_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
         "delete_plan"=>{
@@ -112,53 +100,10 @@ pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stre
 }
 pub fn router_post_memory(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
-        "add_memory"=>{
-            match 增加记忆选项api(用户.unwrap(),http请求){
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            };
-        }
-        "delete_memory"=>{
-            match 删除记忆选项api(用户.unwrap(),http请求){
-                Ok(())=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK","".to_string());
-                    stream.write_all(回复报文.as_bytes()).unwrap();
-                },
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR);
-                }
-            };
-        }
-        "select_memory"=>{
-            //日志生产者::写入日志("查找记忆选项".to_string(), 日志级别::ERROR);
-            match 查找记忆选项(用户.unwrap(),http请求) {
-                Ok(记忆选项)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&记忆选项).unwrap());
-                    日志生产者::写入日志(回复报文.clone(), 日志级别::DEBUG);
-                    stream.write_all(回复报文.as_bytes()).unwrap(); 
-                }
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR); 
-                }   
-            }
-        }
-        "get_memory_review"=>{
-            match 获取复习记忆选项(用户.unwrap(),http请求) {
-                Ok(记忆选项)=>{
-                    let 回复报文=根据信息回复http报文("HTTP/1.1 200 OK",serde_json::to_string(&记忆选项).unwrap());
-                    日志生产者::写入日志(回复报文.clone(), 日志级别::DEBUG);
-                    stream.write_all(回复报文.as_bytes()).unwrap(); 
-                }
-                Err(error)=>{
-                    日志生产者::写入日志(error.to_string(), 日志级别::ERROR); 
-                }   
-            }
-        }
+        "add_memory"=>{判断api处理是否成功并处理(增加记忆选项api(用户.unwrap(),http请求),"HTTP/1.1 200 OK","".to_string(),stream);}
+        "delete_memory"=>{判断api处理是否成功并处理(删除记忆选项api(用户.unwrap(),http请求),"HTTP/1.1 200 OK","".to_string(),stream);}
+        "select_memory"=>{判断api处理是否成功并将结果转换成json格式返回(查找记忆选项(用户.unwrap(),http请求),"HTTP/1.1 200 OK",stream);}
+        "get_memory_review"=>{判断api处理是否成功并将结果转换成json格式返回(获取复习记忆选项(用户.unwrap(),http请求),"HTTP/1.1 200 OK",stream);}
         _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
     }
 }
