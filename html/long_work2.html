@@ -201,7 +201,7 @@
         </div>
         <div class="nav-menu">
             <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
-            <div class="nav-item" onclick="window.location.href='/diary_work'">回退</div>
+            <div class="nav-item" onclick="window.location.href='/long_work'">回退</div>
             <div class="nav-item">设置</div>
             <div class="nav-item" onclick="document.cookie = `jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; window.location.href='/';">注销</div>
         </div>
@@ -211,6 +211,8 @@
     <div class="plan">
         <h1 class="nav-item">计划列表</h1>
         <input id="plan-input" type="text" class="input-modern" placeholder="请输入计划内容">
+        <input id="start-date" type="date" class="input-modern" placeholder="开始日期">
+        <input id="end-date" type="date" class="input-modern" placeholder="完成日期">
         <div><button class="button-light-blue" onclick="addPlan()">添加计划</button><button class="button-light-blue" onclick="selectPlan()">刷新计划</button></div>
         <!-- 功能卡片 -->
         <ul id="plan-list" class="plan-list">
@@ -241,25 +243,48 @@
         const planInput = document.getElementById('plan-input');
         const planList = document.getElementById('plan-list');
 
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const year = date.getFullYear();
+            return `${year}年${date.getMonth() + 1}月${date.getDate()}日`; // getMonth()返回0-11[1](@ref)
+        }
+        
         // 添加计划
         function addPlan() {
             const planText = planInput.value.trim(); // 获取输入框的值并去除首尾空格
             const plan={
                 username:username,
                 planname:planText,
+                begin_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                progress:0,
+                is_solve:false,
             }
             if (planText === '') {
                 alert('请输入计划内容！');
+                return;
+            }
+            if (!plan.begin_date || !plan.end_date) {
+                alert('请选择开始和完成日期！');
+                return;
+            }
+            if (new Date(plan.begin_date) > new Date(plan.end_date)) {
+                alert('完成日期不能早于开始日期！');
                 return;
             }
 
             // 创建一个新的计划项
             const li = document.createElement('li');
             li.className = 'plan-item';
-
-            // 设置计划文本
             li.innerHTML = `
-                <div>${planText}</div>
+                <div>
+                    <div>${plan.planname}</div>
+                    <div class="date-info">
+                        <span>📅 ${formatDate(plan.begin_date)}</span>
+                        <span>→</span>
+                        <span>✅ ${formatDate(plan.end_date)}</span>
+                    </div>
+                </div>
                 <button onclick="deletePlan(this)">删除</button>
             `;
 
@@ -268,7 +293,7 @@
 
             // 清空输入框
             planInput.value = '';
-            fetch("/diary_work/add_plan",{
+            fetch("/long_work/add_plan",{
                 method:'POST',
                 headers: {
                     'Content-Type': 'application/json' // 指定发送的是 JSON 数据
@@ -276,7 +301,7 @@
                 body: JSON.stringify(plan)
             }).then(res=>{
                 if (!res.ok){
-                    alert(`删除错误,状态码${res.status}`)
+                    alert(`添加错误,状态码${res.status}`)
                 }
             })
         }
@@ -287,10 +312,10 @@
             
             const plan={
                 username:username,
-                planname:planItem.children[0].textContent,
+                planname:planItem.children[0].children[0].textContent,
             }
             planList.removeChild(planItem); // 从列表中移除该计划项
-            fetch("/diary_work/delete_plan",{
+            fetch("/long_work/delete_plan",{
                 method:'POST',
                 headers: {
                     'Content-Type': 'application/json' // 指定发送的是 JSON 数据
@@ -304,7 +329,7 @@
         }
         function selectPlan(){
             planList.replaceChildren();
-            fetch("/diary_work/select_plan").then(res =>{
+            fetch("/long_work/select_plan").then(res =>{
                 if (res.ok){
                     return res.json()
                 }else {
@@ -317,7 +342,14 @@
                     li.className = 'plan-item';
                     // 设置计划文本
                     li.innerHTML = `
-                        <div>${data[i].planname}</div>
+                        <div>
+                            <div>${data[i].planname}</div>
+                            <div class="date-info">
+                                <span>📅 ${formatDate(data[i].begin_date)}</span>
+                                <span>→</span>
+                                <span>✅ ${formatDate(data[i].end_date)}</span>
+                            </div>
+                        </div>
                         <button onclick="deletePlan(this)">删除</button>
                     `;
                     planList.appendChild(li)

@@ -130,6 +130,10 @@
     
     <script>
         // 封装用户信息获取逻辑
+        function deleteCookie(name) {
+            ;
+            
+        }
         function fetchUserInfo() {
             fetch('/api/get_username', {
                 method: 'GET',
@@ -155,9 +159,9 @@
         </div>
         <div class="nav-menu">
             <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
-            <div class="nav-item">文档</div>
+            <div class="nav-item" onclick="window.location.href='/dashboard'">回退</div>
             <div class="nav-item">设置</div>
-            <div class="nav-item">帮助</div>
+            <div class="nav-item" onclick="document.cookie = `jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; window.location.href='/';">注销</div>
         </div>
     </nav>
 
@@ -170,18 +174,18 @@
                 <h3 class="function-title">每日计划</h3>
                 <p class="function-desc">管理每日计划的完成情况</p>
             </a>
-
+            <a href="/long_work" class="function-card">
+                <i class="fas fa-shield-alt function-icon"></i>
+                <h3 class="function-title">长期计划</h3>
+                <p class="function-desc">管理长期计划的完成情况</p>
+            </a>
             <a href="/memory" class="function-card">
                 <i class="fas fa-users-cog function-icon"></i>
                 <h3 class="function-title">记忆背诵</h3>
                 <p class="function-desc">强化记忆背诵知识</p>
             </a>
 
-            <a href="#" class="function-card">
-                <i class="fas fa-shield-alt function-icon"></i>
-                <h3 class="function-title">代币经济管理</h3>
-                <p class="function-desc">代币经济管理的赏罚</p>
-            </a>
+            
 
             <a href="/ai" class="function-card">
                 <i class="fas fa-robot function-icon"></i>

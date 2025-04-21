@@ -7,7 +7,7 @@ use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
 use crate::{deepseek_api, login::数据库登录查询信息, network::http请求::http请求, tool::{database::数据库连接池, log::{日志生产者, 日志级别}, tool::解析请求体json数据为结构体}};
 
-use super::{diary_work::调整计划::{寻找所有计划, 更新完成任务情况}, 结果};
+use super::{diary_work::调整计划::{寻找所有计划, 更新完成任务情况}, long_work, 结果};
 #[derive(Serialize,Deserialize,Debug)]
 struct 请求体类{
     role:String,
@@ -76,15 +76,23 @@ pub fn 回应对话(信息:String,用户:数据库登录查询信息) ->结果<S
 CREATE TABLE plan (
     username VARCHAR(255) NOT NULL,
     planname VARCHAR(255) NOT NULL
-);这张是计划表 代表用户与计划
+);这张是每日计划表 代表用户与每日要完成的计划
 CREATE TABLE plan_work (
     username VARCHAR(255) NOT NULL,
     planname VARCHAR(255) NOT NULL,
     date DATE
-);这张是完成计划日期
+);这张是每日完成计划日期
+CREATE TABLE long_plan (
+    username VARCHAR(255) NOT NULL,
+    planname VARCHAR(255) NOT NULL,
+    begin_date DATE,   // 开始日期
+    end_date DATE,     // 结束日期
+    progress INT,      // 完成进度 100代表完成
+    is_solve BOOLEAN   // 是否完成
+);这张是长期计划表,代表长期要完成的计划
 当前用户为:".to_string()+&用户.username+"
-他的计划为:"+&format!("{:?}",寻找所有计划(用户.username)?)+"
-今天的日期为"+&current_date+r#"
+他的每日计划为:"+&format!("{:?}",寻找所有计划(用户.username.clone())?)+
+"他的长期计划为:"+&format!("{:?}",long_work::寻找所有计划(用户.username)?)+"\n"+"今天的日期为"+&current_date+r#"
 如:增加计划 每天工作五小时 (当前用户为abc) 
 则输出:
 要求合法,正在执行命令 增加计划 每天工作五小时 ##insert into plan(username,planname) values ('abc','每天工作五小时')##

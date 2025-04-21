@@ -1,5 +1,5 @@
 use std::{io::Write, net::TcpStream, thread, time::Duration};
-use crate::{tool::tool::解析请求体json数据为结构体, url::{ai::question_api, diary_work::{self, 调整计划::{删除计划api, 增加计划api, 寻找所有计划, 提交完成计划api, 撤销完成计划api, 查询完成计划api, 查询某日的完成任务情况api}}, memory::{删除记忆选项, 删除记忆选项api, 增加记忆选项, 增加记忆选项api, 查找记忆选项, 获取复习记忆选项}, 结果}};
+use crate::{tool::tool::解析请求体json数据为结构体, url::{ai::question_api, diary_work::{self, 调整计划}, long_work, memory::{删除记忆选项, 删除记忆选项api, 增加记忆选项, 增加记忆选项api, 查找记忆选项, 获取复习记忆选项}, 结果}};
 use cookie::{ time, Cookie};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -38,7 +38,8 @@ pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,
             "register"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/register.html",stream);},
             "dashboard"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/dashboard.html",stream);},
             "diary_work"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/diary_work.html",router_get_diary_work);},
-            "memory"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/memory.html",router_get_memory);}
+            "long_work"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/long_work.html",router_get_long_work);},
+            "memory"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/memory.html",router_get_memory);},
             "api"=>{router_get_api(用户,stream,http请求,切割结果);},
             "ai"=>{判断是否是一级url并处理(切割结果,stream,http请求,用户,"HTTP/1.1 200 OK","html/ai.html",router_get_ai);},
             _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
@@ -48,13 +49,32 @@ pub fn router(切割结果:Vec<&str>,http请求:http请求,mut stream:TcpStream,
             "diary_work"=>router_post_diary_work(用户,stream,http请求,切割结果),
             "ai"=>router_post_ai(用户,stream,http请求,切割结果),
             "memory"=>router_post_memory(用户,stream, http请求,切割结果),
+            "long_work"=>router_post_long_work(用户,stream,http请求,切割结果),
             _=>{}
         }
         _=>{
         }
     }
 }
-
+pub fn router_post_long_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        "delete_plan"=>{判断api处理是否成功并处理(long_work::删除计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "add_plan"=>{判断api处理是否成功并处理(long_work::增加计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "select_solve_plan"=>{判断api处理是否成功并将结果转换成json格式返回(long_work::查询完成计划api(http请求),"HTTP/1.1 200 OK",stream);},
+        "solve_plan"=>{判断api处理是否成功并处理(long_work::提交完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        //"revoke_solve_plan"=>{判断api处理是否成功并处理(long_work::撤销完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        _=>{}
+    }
+}
+pub fn router_get_long_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
+    match 切割结果[2]{
+        "select_plan"=>{判断api处理是否成功并将结果转换成json格式返回(long_work::寻找所有计划(用户.unwrap().username),"HTTP/1.1 200 OK",stream);},
+        "long_work1"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/long_work1.html",stream);},
+        "long_work2"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/long_work2.html",stream);},
+        "long_work3"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/long_work3.html",stream);},
+        _=>{根据文件路径回复http报文并写入stream("HTTP/1.1 404 NOT FOUND","html/404.html",stream);}
+    }
+}
 //判断api处理是否成功并处理(,"HTTP/1.1 200 OK",,stream);
 pub fn router_post_ai(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     match 切割结果[2]{
@@ -78,20 +98,20 @@ pub fn router_post_diary_work(用户:Option<数据库登录查询信息>,mut str
     match 切割结果[2]{
         "delete_plan"=>{
             日志生产者::写入日志("运行删除api".to_string(), 日志级别::ERROR);
-            判断api处理是否成功并处理(删除计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);
+            判断api处理是否成功并处理(调整计划::删除计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);
         },
-        "add_plan"=>{判断api处理是否成功并处理(增加计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
-        "solve_plan"=>{判断api处理是否成功并处理(提交完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
-        "revoke_solve_plan"=>{判断api处理是否成功并处理(撤销完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);}
-        "select_solve_plan"=>{判断api处理是否成功并将结果转换成json格式返回(查询完成计划api(http请求),"HTTP/1.1 200 OK",stream);}
-        "select_solve_plan_data"=>{判断api处理是否成功并将结果转换成json格式返回(查询某日的完成任务情况api(http请求),"HTTP/1.1 200 OK",stream);}
+        "add_plan"=>{判断api处理是否成功并处理(调整计划::增加计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "solve_plan"=>{判断api处理是否成功并处理(调整计划::提交完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);},
+        "revoke_solve_plan"=>{判断api处理是否成功并处理(调整计划::撤销完成计划api(http请求),"HTTP/1.1 200 OK","".to_string(),stream);}
+        "select_solve_plan"=>{判断api处理是否成功并将结果转换成json格式返回(调整计划::查询完成计划api(http请求),"HTTP/1.1 200 OK",stream);}
+        "select_solve_plan_data"=>{判断api处理是否成功并将结果转换成json格式返回(调整计划::查询某日的完成任务情况api(http请求),"HTTP/1.1 200 OK",stream);}
         _=>{}
     }
 }
 pub fn router_get_diary_work(用户:Option<数据库登录查询信息>,mut stream:TcpStream,http请求:http请求,切割结果:Vec<&str>){
     
     match 切割结果[2]{
-        "select_plan"=>{判断api处理是否成功并将结果转换成json格式返回(寻找所有计划(用户.unwrap().username),"HTTP/1.1 200 OK",stream);},
+        "select_plan"=>{判断api处理是否成功并将结果转换成json格式返回(调整计划::寻找所有计划(用户.unwrap().username),"HTTP/1.1 200 OK",stream);},
         "diary_work1"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work1.html",stream);},
         "diary_work2"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work2.html",stream);},
         "diary_work3"=>{根据文件路径回复http报文并写入stream("HTTP/1.1 200 OK","html/diary_work3.html",stream);},
@@ -122,7 +142,7 @@ pub fn router_post_api(用户:Option<数据库登录查询信息>,mut stream:Tcp
                 Ok((用户信息,jwt_token))=>{
                     let cookie = Cookie::build(("jwt",jwt_token))
                         .path("/")
-                        .max_age(cookie::time::Duration::minutes(20));
+                        .max_age(cookie::time::Duration::minutes(60));
                     let 回复报文=根据信息回复http报文(&("HTTP/1.1 200 OK\r\nSet-Cookie: ".to_string()+&cookie.to_string())[..], r#"{"message":"成功"}"#.to_string());
                     
                     日志生产者::写入日志("登录成功,请求报文:\r\n".to_string()+"HTTP/1.1 200 OK\r\nSet-Cookie: "+&cookie.to_string(),日志级别::INFO);

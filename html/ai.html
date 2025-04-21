@@ -203,9 +203,9 @@
         </div>
         <div class="nav-menu">
             <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
-            <div class="nav-item">文档</div>
+            <div class="nav-item" onclick="window.location.href='/dashboard'">回退</div>
             <div class="nav-item">设置</div>
-            <div class="nav-item">帮助</div>
+            <div class="nav-item" onclick="document.cookie = `jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; window.location.href='/';">注销</div>
         </div>
     </nav>
 

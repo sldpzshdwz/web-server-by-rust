@@ -3,11 +3,20 @@ use rust91
 
 CREATE TABLE users (
     username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL, -- 实际应用中请确保对密码进行加密处理
+    password VARCHAR(255) NOT NULL, 
     permissions VARCHAR(255) NOT NULL,
     PRIMARY KEY (username)
 );
  
+CREATE TABLE long_plan (
+    username VARCHAR(255) NOT NULL,
+    planname VARCHAR(255) NOT NULL,
+    begin_date DATE,
+    end_date DATE,
+    progress INT,
+    is_solve BOOLEAN
+);
+
 CREATE TABLE plan (
     username VARCHAR(255) NOT NULL,
     planname VARCHAR(255) NOT NULL

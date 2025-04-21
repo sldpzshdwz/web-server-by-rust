@@ -1,10 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh">
+    
 <head>
     <meta charset="UTF-8">
     <title>系统导航面板</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        /* 增强年份显示效果 */
+        .gantt .year-label {
+        font-weight: bold;
+        font-size: 1.2em;
+        fill: #333;
+        }
+
+        /* 多级时间轴间距 */
+        .gantt .scale-section {
+        margin-bottom: 8px;
+        }
         .user-panel {
             display: flex;
             align-items: center;
@@ -122,13 +134,46 @@
 
         .nav-item:hover {
             color: #4AB3F4;
+          
             background: rgba(74, 179, 244, 0.1);
+        }
+        .bar-completed {
+            fill: #28a745 !important;  /* 已完成任务绿色 */
+        }
+        .bar-in-progress{
+            fill: #b9bb44 !important;  /* 进行中的任务黄色 */
+        }
+        /* 响应式容器 */
+        #gantt-container {
+            height: 450px;
+            width: 100%;
+            overflow-x: auto;
         }
     </style>
 </head>
-<body>
-    
+<body>        
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.umd.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
     <script>
+
+        function convertToGanttTask(plan) {
+            console.log({
+                id: `${plan.username}_${Date.now()}`,
+                name: plan.planname,
+                start: plan.begin_date,
+                end: plan.end_date,
+                progress: plan.progress,
+                custom_class: plan.is_solve ? "bar-completed" : "bar-in-progress"
+            });
+            return {
+                id: `${plan.username}_${Date.now()}`,  // 生成唯一ID
+                name: plan.planname,
+                start: plan.begin_date,
+                end: plan.end_date,
+                progress: plan.progress ,  // 转换为百分比
+                custom_class: plan.is_solve ? "bar-completed" : "bar-in-progress"
+            };
+        }
         // 封装用户信息获取逻辑
         function fetchUserInfo() {
             fetch('/api/get_username', {
@@ -136,6 +181,7 @@
             })
             .then(handleResponse)
             .then(updateUI);
+            start();
         }
         function handleResponse(response) {
             if (!response.ok) throw new Error(`HTTP 错误: ${response.status}`);
@@ -144,7 +190,40 @@
         function updateUI(data) {
             document.querySelector('.username').textContent = `当前用户：${data.username}`;
         }
+        function start(){
+            fetch("/long_work/select_plan").then(res =>{
+                if (res.ok){
+                    return res.json()
+                }else {
+                // 如果响应失败，抛出错误
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+            }).then(data=>{
+                // 创建容器
+                document.body.innerHTML += `<div id="gantt-container"></div>`;
+                let tasks=[];
+                for (let i=0;i<data.length;i++){
+                    tasks.push(
+                        convertToGanttTask(data[i])
+                    )
+                }
+                console.log("tasks",tasks);
+                // 初始化甘特图
+                  // 支持多任务数组
+                  const gantt = new Gantt("#gantt-container", tasks, {
+                    view_mode: 'Day',
+                    language: "zh",
+                    subscales: [
+                        { unit: 'year', step: 1, format: '%Y年' }, // 必须使用%Y
+                        { unit: 'month', step: 1, format: '%M月' },
+                        { unit: 'day', step: 1, format: '%d日' }
+                    ],
+                    scale_height: 50  // 增加刻度区域高度
+                });
+            })
+        }
         document.addEventListener('DOMContentLoaded', fetchUserInfo);
+        
     </script>
     <!-- 顶部导航 -->
     <nav class="top-nav">
@@ -155,35 +234,12 @@
         </div>
         <div class="nav-menu">
             <div class="nav-item" onclick="window.location.href='/dashboard'">首页</div>
-            <div class="nav-item" onclick="window.location.href='/dashboard'">回退</div>
+            <div class="nav-item" onclick="window.location.href='/long_work'">回退</div>
             <div class="nav-item">设置</div>
             <div class="nav-item" onclick="document.cookie = `jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`; window.location.href='/';">注销</div>
         </div>
     </nav>
 
-    <!-- 功能导航 -->
-    <div class="nav-container">
-        <div class="function-grid">
-            <!-- 功能卡片 -->
-            <a href="/memory/memory1" class="function-card">
-                <i class="fas fa-cog function-icon"></i>
-                <h3 class="function-title">每日记忆</h3>
-                <p class="function-desc">根据艾宾浩斯法则进行每日复习记忆</p>
-            </a>
-
-            <a href="/memory/memory2" class="function-card">
-                <i class="fas fa-users-cog function-icon"></i>
-                <h3 class="function-title">管理记忆项</h3>
-                <p class="function-desc">强化记忆背诵知识</p>
-            </a>
-
-            <!-- <a href="#" class="function-card">
-                <i class="fas fa-shield-alt function-icon"></i>
-                <h3 class="function-title">代币经济管理</h3>
-                <p class="function-desc">代币经济管理的赏罚</p>
-            </a> -->
-
-        </div>
-    </div>
+    
 </body>
 </html>

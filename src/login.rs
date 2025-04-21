@@ -75,7 +75,7 @@ pub fn 处理api_login请求(http请求:http请求::http请求)->Result<(数据�
         .duration_since(UNIX_EPOCH)
         .expect("Time went backwards")
         .as_secs();
-    let 过期时间戳=当前时间戳+20*60;
+    let 过期时间戳=当前时间戳+60*60;
     let my_claims=Claims{
         username:查询结果[0].username.clone(),
         password:查询结果[0].password.clone(),
