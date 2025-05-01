@@ -57,3 +57,4 @@ UPDATE plan_work_data
 SET complete_plan = 5
 WHERE username = 'lizegang' AND date = '2025-04-21';
 
+nohup cargo run > nohup.out 2>&1 &
