@@ -52,3 +52,8 @@ CREATE TABLE memory_review (
 ) 
 date--复习的日期
 epoch--第几次复习
+
+UPDATE plan_work_data
+SET complete_plan = 5
+WHERE username = 'lizegang' AND date = '2025-04-21';
+
